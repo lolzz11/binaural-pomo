@@ -401,21 +401,9 @@
             gap: 12px;
             align-items: center;
             background: #111115;
-            padding: 0.75rem;
+            padding: 0.75rem 1rem;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.02);
-        }
-
-        .avatar-display-bubble {
-            background: #25252D;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            color: var(--text-main);
-            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .profile-text-fields {
@@ -459,43 +447,6 @@
             border-top: 1px dashed #2D2D35;
             padding-top: 1rem;
             margin-top: 0.5rem;
-        }
-
-        .avatar-grid-selector {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-            margin-bottom: 1.25rem;
-        }
-
-        .grid-avatar-item {
-            background: #111115;
-            border: 1px solid #2D2D35;
-            color: var(--text-muted);
-            padding: 10px 0;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .grid-avatar-item:hover {
-            color: var(--text-main);
-            border-color: #444450;
-            background: #181820;
-        }
-
-        .grid-avatar-item.active {
-            color: var(--theme-accent);
-            border-color: var(--theme-accent);
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .avatar-display-bubble svg, .rank-identity-capsule svg, .friend-identity-capsule svg {
-            display: inline-block;
-            vertical-align: middle;
         }
 
         /* --- Social Network Hub Styling --- */
@@ -611,7 +562,7 @@
         }
     </style>
 
-    <!-- Unified Firebase & Vector Social Engine Module -->
+    <!-- Unified Firebase Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -632,29 +583,10 @@
         const db = getFirestore(app);
 
         let discoveredUserDoc = null;
-        let selectedAvatarKey = "ninja";
-
-        const SVG_AVATARS = {
-            ninja: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
-            bolt: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
-            target: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`,
-            activity: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>`,
-            cpu: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>`,
-            zap: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`
-        };
-        const getAvatarSvg = (key) => SVG_AVATARS[key] || SVG_AVATARS['ninja'];
 
         const generateFallbackUsername = (email) => {
             return email.split('@')[0] + Math.floor(100 + Math.random() * 900);
         };
-
-        document.querySelectorAll('.grid-avatar-item').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.grid-avatar-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                selectedAvatarKey = item.getAttribute('data-avatar');
-            });
-        });
 
         window.firebaseSignUp = async (email, password) => {
             try {
@@ -664,7 +596,6 @@
                 
                 const baseProfile = {
                     username: generateFallbackUsername(email),
-                    avatar: "ninja",
                     totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
                     completedRounds: window.getStatsObject().completedRounds,
                     friendsList: []
@@ -727,7 +658,7 @@
                     
                     document.getElementById('searchResultName').innerHTML = `
                         <div style="display:flex; align-items:center; gap:8px;">
-                            ${getAvatarSvg(discoveredUserDoc.avatar)} <span>${discoveredUserDoc.username}</span>
+                            <span>${discoveredUserDoc.username}</span>
                         </div>
                     `;
                     feedbackCard.style.display = 'flex';
@@ -761,7 +692,7 @@
             } catch(e) { console.error(e); }
         };
 
-        window.updateIdentityConfiguration = async (newUsername, newAvatar) => {
+        window.updateIdentityConfiguration = async (newUsername) => {
             if(!auth.currentUser) return;
             try {
                 const q = query(collection(db, "users"), where("username", "==", newUsername));
@@ -773,12 +704,10 @@
                 }
 
                 await updateDoc(doc(db, "users", auth.currentUser.uid), {
-                    username: newUsername,
-                    avatar: newAvatar
+                    username: newUsername
                 });
                 
                 document.getElementById('usernameDisplayLabel').innerText = newUsername;
-                document.getElementById('avatarDisplayBubble').innerHTML = getAvatarSvg(newAvatar);
                 alert("Profile configuration synchronized.");
                 window.refreshSocialHubData();
             } catch(e) { alert("Error saving profile changes."); }
@@ -800,7 +729,6 @@
                 let networkProfiles = [];
                 networkProfiles.push({
                     username: myData.username,
-                    avatar: myData.avatar,
                     totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
                     uid: auth.currentUser.uid
                 });
@@ -816,7 +744,6 @@
                             fRow.className = 'friend-row-item';
                             fRow.innerHTML = `
                                 <div class="friend-identity-capsule">
-                                    ${getAvatarSvg(fData.avatar)}
                                     <strong>${fData.username}</strong>
                                 </div>
                                 <button class="remove-friend-btn" onclick="removeFriendItem('${fSnap.id}')">Remove</button>
@@ -838,7 +765,6 @@
                     row.innerHTML = `
                         <div class="rank-identity-capsule">
                             <span class="rank-position-index">#${index + 1}</span>
-                            ${getAvatarSvg(profile.avatar)}
                             <span>${profile.username} ${profile.uid === auth.currentUser.uid ? '(You)' : ''}</span>
                         </div>
                         <span style="font-weight:700;">${profile.totalFocusMinutes}m</span>
@@ -868,15 +794,6 @@
                     const cloudData = docSnap.data();
                     document.getElementById('usernameDisplayLabel').innerText = cloudData.username || generateFallbackUsername(user.email);
                     
-                    const userAv = cloudData.avatar || "ninja";
-                    selectedAvatarKey = userAv;
-                    document.getElementById('avatarDisplayBubble').innerHTML = getAvatarSvg(userAv);
-                    
-                    document.querySelectorAll('.grid-avatar-item').forEach(i => {
-                        i.classList.remove('active');
-                        if(i.getAttribute('data-avatar') === userAv) i.classList.add('active');
-                    });
-
                     window.setStatsObject({
                         totalFocusMinutes: cloudData.totalFocusMinutes || window.getStatsObject().totalFocusMinutes,
                         completedRounds: cloudData.completedRounds || window.getStatsObject().completedRounds
@@ -895,7 +812,7 @@
         document.getElementById('saveProfileBtn').addEventListener('click', () => {
             const newUser = document.getElementById('editUsernameInput').value.trim();
             if(!newUser || newUser.length < 3) { alert("Username is too short."); return; }
-            window.updateIdentityConfiguration(newUser, selectedAvatarKey);
+            window.updateIdentityConfiguration(newUser);
             document.getElementById('profileEditDrawer').style.display = 'none';
         });
     </script>
@@ -965,9 +882,9 @@
                     <button id="tabSignup" class="auth-tab">Create Account</button>
                 </div>
                 
-                <!-- Condensed exact notice message -->
+                <!-- Notice text rephrased identically to user meaning without adding extra context -->
                 <div class="auth-notice">
-                    You can save your stats across devices with signing in, second you can add friends and show friendlist ranking.
+                    Signing in allows you to preserve your data across separate systems, as well as include companions and view friendlist rankings.
                 </div>
                 
                 <input type="email" id="authEmail" placeholder="Email Address">
@@ -979,7 +896,6 @@
                 <div class="panel-header" style="margin:0;">Active User Profile</div>
                 
                 <div class="profile-customizer-box">
-                    <div id="avatarDisplayBubble" class="avatar-display-bubble" title="Change Avatar Icon"></div>
                     <div class="profile-text-fields">
                         <span id="usernameDisplayLabel" class="profile-username-tag">---</span>
                         <span id="userEmailDisplay" class="profile-email-subtext">---</span>
@@ -994,30 +910,6 @@
 
                 <div id="profileEditDrawer" class="sub-drawer-panel">
                     <input type="text" id="editUsernameInput" placeholder="New Unique Username" style="margin-bottom:1.25rem;">
-                    
-                    <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Select Premium Avatar State</label>
-                    
-                    <div class="avatar-grid-selector" id="avatarGridSelector">
-                        <div class="grid-avatar-item active" data-avatar="ninja" title="Shadow Ninja">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        </div>
-                        <div class="grid-avatar-item" data-avatar="bolt" title="Focus Charge">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                        </div>
-                        <div class="grid-avatar-item" data-avatar="target" title="Deep Flow">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-                        </div>
-                        <div class="grid-avatar-item" data-avatar="activity" title="Hyper Drive">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                        </div>
-                        <div class="grid-avatar-item" data-avatar="cpu" title="Neural Sync">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
-                        </div>
-                        <div class="grid-avatar-item" data-avatar="zap" title="Apex Bound">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                        </div>
-                    </div>
-                    
                     <button id="saveProfileBtn" class="auth-submit-btn">Save Identity Changes</button>
                 </div>
 
