@@ -301,7 +301,6 @@
         }
         .reset-link:hover { opacity: 1; }
 
-        /* Muted Discrete Account Section at bottom */
         .discrete-auth-toggle {
             display: block;
             width: 100%;
@@ -373,85 +372,6 @@
             word-break: break-all;
         }
     </style>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCRY64EvtgTPPCaNA2q9BiQyV0_3HZuD6E",
-            authDomain: "flowspace-bf064.firebaseapp.com",
-            projectId: "flowspace-bf064",
-            storageBucket: "flowspace-bf064.firebasestorage.app",
-            messagingSenderId: "475448486655",
-            appId: "1:475448486655:web:a0b1ce563695397e283aca",
-            measurementId: "G-X3K6ZVSVBF"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // Explicit Global Native Scope Mapping to bypass module constraints
-        window.firebaseSignUp = async (email, password) => {
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
-                await setDoc(doc(db, "users", cred.user.uid), window.stats);
-                document.getElementById('authPanel').style.display = 'none';
-            } catch (err) { alert(err.message); }
-        };
-
-        window.firebaseLogIn = async (email, password) => {
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                document.getElementById('authPanel').style.display = 'none';
-            } catch (err) { alert(err.message); }
-        };
-
-        window.firebaseLogOut = () => { signOut(auth); };
-
-        window.syncStatsToCloud = async () => {
-            if (auth.currentUser) {
-                try {
-                    await setDoc(doc(db, "users", auth.currentUser.uid), window.stats);
-                } catch(e) { console.error("Cloud push failed:", e); }
-            }
-        };
-
-        onAuthStateChanged(auth, async (user) => {
-            const badge = document.getElementById('userBadge');
-            const actionBtnContainer = document.getElementById('authActionGroup');
-            const noticeEl = document.getElementById('authNoticeText');
-            const linkToggle = document.getElementById('discreteAuthLink');
-
-            if (user) {
-                badge.innerText = `Connected: ${user.email}`;
-                badge.style.display = 'block';
-                if(noticeEl) noticeEl.style.display = 'none';
-                if(linkToggle) linkToggle.innerText = "Manage Cloud Sync Profile";
-                actionBtnContainer.innerHTML = `<button class="auth-btn auth-btn-secondary" onclick="window.firebaseLogOut()">Log Out</button>`;
-                
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    window.stats = docSnap.data();
-                    localStorage.setItem('fp_stats', JSON.stringify(window.stats));
-                    document.getElementById('statMinutes').innerText = window.stats.totalFocusMinutes;
-                    document.getElementById('statRounds').innerText = window.stats.completedRounds;
-                }
-            } else {
-                badge.style.display = 'none';
-                badge.innerText = '';
-                if(noticeEl) noticeEl.style.display = 'block';
-                if(linkToggle) linkToggle.innerText = "Cloud Storage Sync (Optional)";
-                actionBtnContainer.innerHTML = `
-                    <button class="auth-btn auth-btn-primary" onclick="window.handleAuthSubmit('login')">Log In</button>
-                    <button class="auth-btn auth-btn-secondary" onclick="window.handleAuthSubmit('signup')">Sign Up</button>
-                `;
-            }
-        });
-    </script>
 </head>
 <body>
 
@@ -508,10 +428,10 @@
             </div>
         </div>
 
-        <button id="discreteAuthLink" class="discrete-auth-toggle" onclick="window.toggleAuthPanel()">Cloud Storage Sync (Optional)</button>
+        <button id="discreteAuthLink" class="discrete-auth-toggle" onclick="window.toggleAuthPanel()">Sign In (Optional)</button>
 
         <div id="authPanel" class="auth-panel">
-            <div class="panel-header" style="margin-bottom:0.5rem;">Cloud Storage Sync</div>
+            <div class="panel-header" style="margin-bottom:0.5rem;">Sign In Profile</div>
             <div id="authNoticeText" class="auth-notice">
                 Login option only serves the purpose of saving your stats. If you don't want to sync it you don't need to login.
             </div>
@@ -519,35 +439,372 @@
             <input type="email" id="authEmail" placeholder="Email Address">
             <input type="password" id="authPassword" placeholder="Password">
             <div id="authActionGroup" class="auth-btn-group">
-                </div>
+                <button class="auth-btn auth-btn-primary" onclick="window.handleAuthSubmit('login')">Log In</button>
+                <button class="auth-btn auth-btn-secondary" onclick="window.handleAuthSubmit('signup')">Sign Up</button>
+            </div>
         </div>
 
     </div>
 </div>
 
 <script>
-    // --- PWA Environment Cache Engine ---
-    let deferredPrompt = null;
-    if ('serviceWorker' in navigator) {
-        const swCode = `
-            const CACHE_NAME = 'binaural-flow-v18';
-            self.addEventListener('install', (e) => self.skipWaiting());
-            self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
-        `;
-        const swBlob = new Blob([swCode], {type: 'application/javascript'});
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.log(err));
+    // Global variable buckets safe from modular scoping isolation blocks
+    window.stats = { totalFocusMinutes: 0, completedRounds: 0 };
+    
+    const FOCUS_TIME = 25;
+    const SHORT_BREAK = 5;
+    const LONG_BREAK = 15;
+
+    let timeLeft = FOCUS_TIME * 60;
+    let timerId = null;
+    let currentMode = 'focus'; 
+    let roundCount = 1;
+
+    let audioCtx = null;
+    let oscL = null;
+    let oscR = null;
+    let gainNode = null;
+
+    window.onload = function() {
+        loadAudioSettings();
+        loadStats();
+        updateDisplay();
+    };
+
+    window.toggleAuthPanel = function() {
+        const p = document.getElementById('authPanel');
+        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+    };
+
+    window.handleAuthSubmit = function(type) {
+        const email = document.getElementById('authEmail').value;
+        const pass = document.getElementById('authPassword').value;
+        if(!email || !pass) { alert("Please complete form parameters."); return; }
+        if(type === 'login' && window.firebaseLogIn) window.firebaseLogIn(email, pass);
+        if(type === 'signup' && window.firebaseSignUp) window.firebaseSignUp(email, pass);
+    };
+
+    function loadAudioSettings() {
+        const savedToggle = localStorage.getItem('fp_audio_enabled');
+        if (savedToggle !== null) document.getElementById('audioToggle').checked = (savedToggle === 'true');
+        const savedPreset = localStorage.getItem('fp_wave_preset');
+        if (savedPreset !== null) document.getElementById('wavePreset').value = savedPreset;
+        const savedVol = localStorage.getItem('fp_volume');
+        if (savedVol !== null) document.getElementById('volume').value = savedVol;
     }
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        document.getElementById('pwaInstallBtn').style.display = 'block';
-    });
+    window.saveAudioSettings = function() {
+        localStorage.setItem('fp_audio_enabled', document.getElementById('audioToggle').checked);
+        localStorage.setItem('fp_wave_preset', document.getElementById('wavePreset').value);
+        localStorage.setItem('fp_volume', document.getElementById('volume').value);
+    };
 
-    window.triggerPWAInstall = function() {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') document.getElementById('pwaInstallBtn').style.display = 'none';
-            deferredPrompt = null;
-        })
+    function loadStats() {
+        const savedStats = localStorage.getItem('fp_stats');
+        if (savedStats) {
+            window.stats = JSON.parse(savedStats);
+            document.getElementById('statMinutes').innerText = window.stats.totalFocusMinutes;
+            document.getElementById('statRounds').innerText = window.stats.completedRounds;
+        }
+    }
+
+    function logFocusMinute() {
+        window.stats.totalFocusMinutes += 1;
+        document.getElementById('statMinutes').innerText = window.stats.totalFocusMinutes;
+        localStorage.setItem('fp_stats', JSON.stringify(window.stats));
+        if (window.syncStatsToCloud) window.syncStatsToCloud();
+    }
+
+    function logCompletedRound() {
+        window.stats.completedRounds += 1;
+        document.getElementById('statRounds').innerText = window.stats.completedRounds;
+        localStorage.setItem('fp_stats', JSON.stringify(window.stats));
+        if (window.syncStatsToCloud) window.syncStatsToCloud();
+    }
+
+    window.clearStats = function() {
+        if(confirm("Wipe clear your performance metrics dashboard logs?")) {
+            window.stats = { totalFocusMinutes: 0, completedRounds: 0 };
+            localStorage.setItem('fp_stats', JSON.stringify(window.stats));
+            document.getElementById('statMinutes').innerText = "0";
+            document.getElementById('statRounds').innerText = "0";
+            if (window.syncStatsToCloud) window.syncStatsToCloud();
+        }
+    };
+
+    function updateDisplay() {
+        const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const secs = (timeLeft % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = `${mins}:${secs}`;
+        
+        const statusEl = document.getElementById('status');
+        const root = document.documentElement;
+        
+        if (currentMode === 'focus') {
+            statusEl.innerText = "Focus Phase";
+            root.style.setProperty('--theme-glow', 'var(--focus-glow)');
+            root.style.setProperty('--theme-accent', 'var(--focus-accent)');
+        } else if (currentMode === 'shortBreak') {
+            statusEl.innerText = "Short Break";
+            root.style.setProperty('--theme-glow', 'var(--break-glow)');
+            root.style.setProperty('--theme-accent', 'var(--break-accent)');
+        } else {
+            statusEl.innerText = "Long Break";
+            root.style.setProperty('--theme-glow', 'var(--long-glow)');
+            root.style.setProperty('--theme-accent', 'var(--long-accent)');
+        }
+        document.getElementById('round').innerText = `Round ${roundCount} of 4`;
+    }
+
+    window.toggleTimer = function() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        } catch(e) { console.warn(e); }
+
+        if (timerId) {
+            clearInterval(timerId);
+            timerId = null;
+            document.getElementById('startBtn').innerText = 'Start';
+            try { stopAudio(); } catch(e){}
+        } else {
+            document.getElementById('startBtn').innerText = 'Pause';
+            if (currentMode === 'focus') {
+                try { startAudio(); } catch(e){}
+            }
+            
+            timerId = setInterval(() => {
+                timeLeft--;
+                if (currentMode === 'focus' && (timeLeft > 0) && (timeLeft % 60 === 0)) {
+                    logFocusMinute();
+                }
+                if (timeLeft < 0) {
+                    handlePhaseTransition(true);
+                }
+                updateDisplay();
+            }, 1000);
+        }
+    };
+
+    function handlePhaseTransition(playAlert = false) {
+        clearInterval(timerId);
+        timerId = null;
+        document.getElementById('startBtn').innerText = 'Start';
+        try { stopAudio(); } catch(e){}
+
+        if (playAlert) {
+            try {
+                if (currentMode === 'focus') {
+                    playChimeNotification('focusEnds');
+                } else {
+                    playChimeNotification('breakEnds');
+                }
+            } catch(e){}
+        }
+
+        if (currentMode === 'focus') {
+            logCompletedRound();
+            if (roundCount < 4) {
+                currentMode = 'shortBreak';
+                timeLeft = SHORT_BREAK * 60;
+            } else {
+                currentMode = 'longBreak';
+                timeLeft = LONG_BREAK * 60;
+            }
+        } else {
+            if (currentMode === 'longBreak') {
+                roundCount = 1;
+            } else {
+                roundCount++;
+            }
+            currentMode = 'focus';
+            timeLeft = FOCUS_TIME * 60;
+        }
+        window.toggleTimer();
+    }
+
+    window.skipSession = function() {
+        handlePhaseTransition(false); 
+        updateDisplay();
+    };
+
+    window.resetTimer = function() {
+        clearInterval(timerId);
+        timerId = null;
+        try { stopAudio(); } catch(e){}
+        currentMode = 'focus';
+        roundCount = 1;
+        timeLeft = FOCUS_TIME * 60;
+        document.getElementById('startBtn').innerText = 'Start';
+        updateDisplay();
+    };
+
+    function initAudioNodes() {
+        // Safe check: If audio configuration toggle checkbox is turned off, do absolutely nothing.
+        if (!document.getElementById('audioToggle').checked) return;
+        if (!audioCtx || (oscL && oscR)) return;
+
+        oscL = audioCtx.createOscillator();
+        oscR = audioCtx.createOscillator();
+        let pannerL = audioCtx.createStereoPanner();
+        let pannerR = audioCtx.createStereoPanner();
+        gainNode = audioCtx.createGain();
+
+        pannerL.pan.value = -1; 
+        pannerR.pan.value = 1;  
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+
+        oscL.connect(pannerL).connect(gainNode);
+        oscR.connect(pannerR).connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        window.updateFrequencies();
+
+        oscL.start();
+        oscR.start();
+    }
+
+    window.updateFrequencies = function() {
+        if (!oscL || !oscR) return;
+        const preset = document.getElementById('wavePreset').value;
+        oscL.frequency.setValueAtTime(180, audioCtx.currentTime); 
+        oscR.frequency.setValueAtTime((preset === 'beta') ? 195 : 190, audioCtx.currentTime);
+    };
+
+    function startAudio() {
+        if (!document.getElementById('audioToggle').checked) return;
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        initAudioNodes();
+        
+        const targetVol = parseFloat(document.getElementById('volume').value);
+        if (gainNode && audioCtx) {
+            gainNode.gain.linearRampToValueAtTime(targetVol, audioCtx.currentTime + 0.05);
+        }
+    }
+
+    function stopAudio() {
+        if (audioCtx && gainNode) {
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+        }
+    }
+
+    window.handleAudioToggle = function() {
+        if (document.getElementById('audioToggle').checked && timerId && currentMode === 'focus') {
+            startAudio();
+        } else {
+            stopAudio();
+        }
+    };
+
+    window.updateVolume = function() {
+        const userVol = parseFloat(document.getElementById('volume').value);
+        if (gainNode && audioCtx) {
+            gainNode.gain.setValueAtTime(userVol, audioCtx.currentTime);
+        }
+    };
+
+    function playChimeNotification(type) {
+        if (!audioCtx) return;
+        const chimeOsc = audioCtx.createOscillator();
+        const chimeGain = audioCtx.createGain();
+        chimeOsc.connect(chimeGain).connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'focusEnds') {
+            chimeOsc.type = 'sine';
+            chimeOsc.frequency.setValueAtTime(659.25, now); 
+            chimeOsc.frequency.setValueAtTime(880.00, now + 0.12); 
+            chimeGain.gain.setValueAtTime(0, now);
+            chimeGain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            chimeOsc.start(now); chimeOsc.stop(now + 0.6);
+        } else {
+            chimeOsc.type = 'triangle'; 
+            chimeOsc.frequency.setValueAtTime(523.25, now); 
+            chimeGain.gain.setValueAtTime(0, now);
+            chimeGain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            chimeOsc.start(now); chimeOsc.stop(now + 0.5);
+        }
+    }
+</script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCRY64EvtgTPPCaNA2q9BiQyV0_3HZuD6E",
+        authDomain: "flowspace-bf064.firebaseapp.com",
+        projectId: "flowspace-bf064",
+        storageBucket: "flowspace-bf064.firebasestorage.app",
+        messagingSenderId: "475448486655",
+        appId: "1:475448486655:web:a0b1ce563695397e283aca",
+        measurementId: "G-X3K6ZVSVBF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.firebaseSignUp = async (email, password) => {
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, "users", cred.user.uid), window.stats);
+            document.getElementById('authPanel').style.display = 'none';
+        } catch (err) { alert(err.message); }
+    };
+
+    window.firebaseLogIn = async (email, password) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            document.getElementById('authPanel').style.display = 'none';
+        } catch (err) { alert(err.message); }
+    };
+
+    window.firebaseLogOut = () => { signOut(auth); };
+
+    window.syncStatsToCloud = async () => {
+        if (auth.currentUser) {
+            try {
+                await setDoc(doc(db, "users", auth.currentUser.uid), window.stats);
+            } catch(e) { console.error("Cloud push failed:", e); }
+        }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+        const badge = document.getElementById('userBadge');
+        const actionBtnContainer = document.getElementById('authActionGroup');
+        const noticeEl = document.getElementById('authNoticeText');
+        const linkToggle = document.getElementById('discreteAuthLink');
+
+        if (user) {
+            badge.innerText = `Connected: ${user.email}`;
+            badge.style.display = 'block';
+            if(noticeEl) noticeEl.style.display = 'none';
+            if(linkToggle) linkToggle.innerText = "Manage Account Profile";
+            actionBtnContainer.innerHTML = `<button class="auth-btn auth-btn-secondary" onclick="window.firebaseLogOut()">Log Out</button>`;
+            
+            const docRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                window.stats = docSnap.data();
+                localStorage.setItem('fp_stats', JSON.stringify(window.stats));
+                document.getElementById('statMinutes').innerText = window.stats.totalFocusMinutes;
+                document.getElementById('statRounds').innerText = window.stats.completedRounds;
+            }
+        } else {
+            badge.style.display = 'none';
+            badge.innerText = '';
+            if(noticeEl) noticeEl.style.display = 'block';
+            if(linkToggle) linkToggle.innerText = "Sign In (Optional)";
+            actionBtnContainer.innerHTML = `
+                <button class="auth-btn auth-btn-primary" onclick="window.handleAuthSubmit('login')">Log In</button>
+                <button class="auth-btn auth-btn-secondary" onclick="window.handleAuthSubmit('signup')">Sign Up</button>
+            `;
+        }
+    });
+</script>
+</body>
+</html>
