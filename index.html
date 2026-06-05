@@ -105,7 +105,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         #pwaInstallBtn {
@@ -120,78 +120,6 @@
             cursor: pointer;
             backdrop-filter: blur(10px);
             transition: all 0.2s ease;
-        }
-
-        .auth-trigger-btn {
-            background: #212126;
-            border: 1px solid #2D2D35;
-            color: var(--text-main);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            transition: background 0.2s;
-        }
-        .auth-trigger-btn:hover { background: #2D2D35; }
-
-        /* Auth Panel Styles */
-        .auth-panel {
-            background: #1A1A1F;
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-            display: none;
-            text-align: left;
-        }
-        
-        .auth-notice {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .auth-panel input {
-            width: 100%;
-            box-sizing: border-box;
-            background: #111115;
-            border: 1px solid #2D2D35;
-            color: var(--text-main);
-            padding: 0.6rem;
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            font-size: 0.85rem;
-            outline: none;
-        }
-        .auth-btn-group {
-            display: flex;
-            gap: 8px;
-        }
-        .auth-btn {
-            flex: 1;
-            padding: 0.5rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            border: none;
-        }
-        .auth-btn-primary { background: var(--text-main); color: var(--bg-color); }
-        .auth-btn-secondary { background: transparent; border: 1px solid #2D2D35; color: var(--text-muted); }
-        
-        .user-badge {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            display: none;
-            word-break: break-all;
         }
 
         .status-badge {
@@ -372,6 +300,78 @@
             transition: opacity 0.2s;
         }
         .reset-link:hover { opacity: 1; }
+
+        /* Muted Discrete Account Section at bottom */
+        .discrete-auth-toggle {
+            display: block;
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-decoration: underline;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            text-align: center;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .discrete-auth-toggle:hover { opacity: 1; }
+
+        .auth-panel {
+            background: #1A1A1F;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-top: 1rem;
+            display: none;
+            text-align: left;
+        }
+        
+        .auth-notice {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .auth-panel input {
+            width: 100%;
+            box-sizing: border-box;
+            background: #111115;
+            border: 1px solid #2D2D35;
+            color: var(--text-main);
+            padding: 0.6rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .auth-btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .auth-btn {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+        }
+        .auth-btn-primary { background: var(--text-main); color: var(--bg-color); }
+        .auth-btn-secondary { background: transparent; border: 1px solid #2D2D35; color: var(--text-muted); }
+        
+        .user-badge {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: none;
+            word-break: break-all;
+        }
     </style>
 
     <script type="module">
@@ -393,6 +393,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // Explicit Global Native Scope Mapping to bypass module constraints
         window.firebaseSignUp = async (email, password) => {
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -422,12 +423,14 @@
             const badge = document.getElementById('userBadge');
             const actionBtnContainer = document.getElementById('authActionGroup');
             const noticeEl = document.getElementById('authNoticeText');
+            const linkToggle = document.getElementById('discreteAuthLink');
 
             if (user) {
                 badge.innerText = `Connected: ${user.email}`;
                 badge.style.display = 'block';
                 if(noticeEl) noticeEl.style.display = 'none';
-                actionBtnContainer.innerHTML = `<button class="auth-btn auth-btn-secondary" onclick="firebaseLogOut()">Log Out</button>`;
+                if(linkToggle) linkToggle.innerText = "Manage Cloud Sync Profile";
+                actionBtnContainer.innerHTML = `<button class="auth-btn auth-btn-secondary" onclick="window.firebaseLogOut()">Log Out</button>`;
                 
                 const docRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(docRef);
@@ -441,9 +444,10 @@
                 badge.style.display = 'none';
                 badge.innerText = '';
                 if(noticeEl) noticeEl.style.display = 'block';
+                if(linkToggle) linkToggle.innerText = "Cloud Storage Sync (Optional)";
                 actionBtnContainer.innerHTML = `
-                    <button class="auth-btn auth-btn-primary" onclick="handleAuthSubmit('login')">Log In</button>
-                    <button class="auth-btn auth-btn-secondary" onclick="handleAuthSubmit('signup')">Sign Up</button>
+                    <button class="auth-btn auth-btn-primary" onclick="window.handleAuthSubmit('login')">Log In</button>
+                    <button class="auth-btn auth-btn-secondary" onclick="window.handleAuthSubmit('signup')">Sign Up</button>
                 `;
             }
         });
@@ -455,10 +459,56 @@
     <div class="relative-content">
         
         <div class="top-action-bar">
-            <button id="pwaInstallBtn" onclick="triggerPWAInstall()">📥 Install App</button>
-            <div style="flex-grow:1;"></div>
-            <button class="auth-trigger-btn" onclick="toggleAuthPanel()" title="Account Sync">👤</button>
+            <button id="pwaInstallBtn" onclick="window.triggerPWAInstall()">📥 Install App</button>
         </div>
+
+        <div id="status" class="status-badge">Focus Phase</div>
+        <div id="timer" class="timer-display">25:00</div>
+        <div id="round" class="cycle-tracker">Round 1 of 4</div>
+
+        <div class="primary-controls">
+            <button id="startBtn" class="btn btn-main" onclick="window.toggleTimer()">Start</button>
+            <button class="btn btn-sub" onclick="window.skipSession()" title="Skip Session">⏭</button>
+            <button class="btn btn-sub" onclick="window.resetTimer()" title="Reset Session">🔄</button>
+        </div>
+
+        <div class="settings-panel">
+            <div class="panel-header">Audio System</div>
+            <div class="config-row">
+                <label for="audioToggle">Binaural Waves</label>
+                <input type="checkbox" id="audioToggle" checked onchange="window.saveAudioSettings(); window.handleAudioToggle();">
+            </div>
+            <div class="config-row">
+                <label for="wavePreset">Wave State</label>
+                <select id="wavePreset" onchange="window.saveAudioSettings(); window.updateFrequencies();">
+                    <option value="beta">Beta (15 Hz) — Drive</option>
+                    <option value="alpha">Alpha (10 Hz) — Flow</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <label for="volume">Ambient Vol</label>
+                <input type="range" id="volume" min="0" max="0.08" step="0.01" value="0.03" oninput="window.updateVolume();" onchange="window.saveAudioSettings();">
+            </div>
+        </div>
+
+        <div class="settings-panel" style="margin-top: 1.5rem;">
+            <div class="panel-header">
+                Performance Dashboard
+                <button class="reset-link" onclick="window.clearStats()">Clear Metrics</button>
+            </div>
+            <div class="dashboard-grid">
+                <div class="metric-tile">
+                    <div id="statMinutes" class="metric-value">0</div>
+                    <div class="metric-label">Focus Mins</div>
+                </div>
+                <div class="metric-tile">
+                    <div id="statRounds" class="metric-value">0</div>
+                    <div class="metric-label">Rounds Clear</div>
+                </div>
+            </div>
+        </div>
+
+        <button id="discreteAuthLink" class="discrete-auth-toggle" onclick="window.toggleAuthPanel()">Cloud Storage Sync (Optional)</button>
 
         <div id="authPanel" class="auth-panel">
             <div class="panel-header" style="margin-bottom:0.5rem;">Cloud Storage Sync</div>
@@ -472,61 +522,15 @@
                 </div>
         </div>
 
-        <div id="status" class="status-badge">Focus Phase</div>
-        <div id="timer" class="timer-display">25:00</div>
-        <div id="round" class="cycle-tracker">Round 1 of 4</div>
-
-        <div class="primary-controls">
-            <button id="startBtn" class="btn btn-main" onclick="toggleTimer()">Start</button>
-            <button class="btn btn-sub" onclick="skipSession()" title="Skip Session">⏭</button>
-            <button class="btn btn-sub" onclick="resetTimer()" title="Reset Session">🔄</button>
-        </div>
-
-        <div class="settings-panel">
-            <div class="panel-header">Audio System</div>
-            <div class="config-row">
-                <label for="audioToggle">Binaural Waves</label>
-                <input type="checkbox" id="audioToggle" checked onchange="saveAudioSettings(); handleAudioToggle();">
-            </div>
-            <div class="config-row">
-                <label for="wavePreset">Wave State</label>
-                <select id="wavePreset" onchange="saveAudioSettings(); updateFrequencies();">
-                    <option value="beta">Beta (15 Hz) — Drive</option>
-                    <option value="alpha">Alpha (10 Hz) — Flow</option>
-                </select>
-            </div>
-            <div class="config-row">
-                <label for="volume">Ambient Vol</label>
-                <input type="range" id="volume" min="0" max="0.08" step="0.01" value="0.03" oninput="updateVolume();" onchange="saveAudioSettings();">
-            </div>
-        </div>
-
-        <div class="settings-panel" style="margin-top: 1.5rem;">
-            <div class="panel-header">
-                Performance Dashboard
-                <button class="reset-link" onclick="clearStats()">Clear Metrics</button>
-            </div>
-            <div class="dashboard-grid">
-                <div class="metric-tile">
-                    <div id="statMinutes" class="metric-value">0</div>
-                    <div class="metric-label">Focus Mins</div>
-                </div>
-                <div class="metric-tile">
-                    <div id="statRounds" class="metric-value">0</div>
-                    <div class="metric-label">Rounds Clear</div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
 <script>
-    // --- PWA Ecosystem Engine Setup ---
+    // --- PWA Environment Cache Engine ---
     let deferredPrompt = null;
     if ('serviceWorker' in navigator) {
-        // Incremented version to drop the old cached stylesheet version instantly
         const swCode = `
-            const CACHE_NAME = 'binaural-flow-v14';
+            const CACHE_NAME = 'binaural-flow-v18';
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
         `;
@@ -540,28 +544,10 @@
         document.getElementById('pwaInstallBtn').style.display = 'block';
     });
 
-    function triggerPWAInstall() {
+    window.triggerPWAInstall = function() {
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choiceResult) => {
             if (choiceResult.outcome === 'accepted') document.getElementById('pwaInstallBtn').style.display = 'none';
             deferredPrompt = null;
-        });
-    }
-
-    // --- Core Architecture Timers ---
-    const FOCUS_TIME = 25;
-    const SHORT_BREAK = 5;
-    const LONG_BREAK = 15;
-
-    let timeLeft = FOCUS_TIME * 60;
-    let timerId = null;
-    let currentMode = 'focus'; 
-    let roundCount = 1;
-
-    let audioCtx = null;
-    let oscL = null;
-    let oscR = null;
-    let gainNode = null;
-
-    wind
+        })
