@@ -449,7 +449,6 @@
             margin-top: 0.5rem;
         }
 
-        /* --- Social Network Hub Styling --- */
         .social-network-hub {
             margin-top: 1.5rem;
             border-top: 1px solid var(--card-border);
@@ -562,6 +561,7 @@
         }
     </style>
 
+    <!-- Unified Firebase Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -583,7 +583,6 @@
 
         let discoveredUserDoc = null;
 
-        // Security Patch: strict alpha-numeric client validation pattern for usernames
         const isValidUsername = (username) => {
             const regex = /^[a-zA-Z0-9_]{3,15}$/;
             return regex.test(username);
@@ -624,7 +623,6 @@
 
         window.firebaseLogOut = () => { signOut(auth); };
 
-        // Security Patch: Prompt for current password before permitting modifications
         window.firebaseUpdatePassword = async (currentPassword, newPassword) => {
             if(!auth.currentUser) return;
             if (newPassword.length < 8) {
@@ -677,7 +675,6 @@
                     const snap = querySnapshot.docs[0];
                     discoveredUserDoc = { uid: snap.id, ...snap.data() };
                     
-                    // Security Patch: Escaped via textContent layout assignment to block XSS vector completely
                     const container = document.getElementById('searchResultName');
                     container.innerHTML = ''; 
                     const innerDiv = document.createElement('div');
@@ -720,7 +717,6 @@
             } catch(e) { console.error(e); }
         };
 
-        // Security Patch: Atomic validation using a runTransaction wrapper execution step
         window.updateIdentityConfiguration = async (newUsername) => {
             if(!auth.currentUser) return;
             if(!isValidUsername(newUsername)) {
@@ -779,7 +775,6 @@
                             const fData = fSnap.data();
                             networkProfiles.push({ uid: fSnap.id, ...fData });
 
-                            // Security Patch: Replaced innerHTML templates with programmatic Node injection textContent setups
                             const fRow = document.createElement('div');
                             fRow.className = 'friend-row-item';
                             
@@ -1076,9 +1071,19 @@
     }
 
     function loadStats() {
-        const savedStats = localStorage.getItem('fp_stats');
-        if (savedStats) {
-            stats = JSON.parse(savedStats);
+        try {
+            const savedStats = localStorage.getItem('fp_stats');
+            if (savedStats) {
+                stats = JSON.parse(savedStats);
+                if (typeof stats.totalFocusMinutes !== 'number' || typeof stats.completedRounds !== 'number') {
+                    throw new Error("Invalid format");
+                }
+                updateStatUI();
+            }
+        } catch (e) {
+            console.warn("Corrupted storage detected, resetting client metrics:", e);
+            stats = { totalFocusMinutes: 0, completedRounds: 0 };
+            localStorage.setItem('fp_stats', JSON.stringify(stats));
             updateStatUI();
         }
     }
@@ -1364,7 +1369,6 @@
     updateDisplay();
 
     let deferredPrompt = null;
-    // Security Patch: Standard inline service worker scope registration fallback mechanics
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js').catch(err => {
