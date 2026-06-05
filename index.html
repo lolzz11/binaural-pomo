@@ -317,7 +317,6 @@
             <button class="btn btn-sub" onclick="resetTimer()" title="Reset Session">🔄</button>
         </div>
 
-        <!-- Audio Config Panel -->
         <div class="settings-panel">
             <div class="panel-header">Audio System</div>
             <div class="config-row">
@@ -337,7 +336,6 @@
             </div>
         </div>
 
-        <!-- Metric Analytics Panel -->
         <div class="settings-panel" style="margin-top: 1.5rem;">
             <div class="panel-header">
                 Performance Dashboard
@@ -362,7 +360,7 @@
     let deferredPrompt = null;
     if ('serviceWorker' in navigator) {
         const swCode = `
-            const CACHE_NAME = 'binaural-flow-v5';
+            const CACHE_NAME = 'binaural-flow-v6';
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
         `;
@@ -385,7 +383,7 @@
         });
     }
 
-    // --- Pomodoro Configuration Engine ---
+    // --- Pomodoro Configuration Timers ---
     const FOCUS_TIME = 25;
     const SHORT_BREAK = 5;
     const LONG_BREAK = 15;
@@ -395,7 +393,7 @@
     let currentMode = 'focus'; 
     let roundCount = 1;
 
-    // Audio API Infrastructure Nodes
+    // Audio API Infrastructure
     let audioCtx = null;
     let oscL = null;
     let oscR = null;
@@ -416,6 +414,18 @@
         if (savedPreset !== null) document.getElementById('wavePreset').value = savedPreset;
         const savedVol = localStorage.getItem('fp_volume');
         if (savedVol !== null) document.getElementById('volume').value = savedVol;
+    }
+
+    // Failsafe Audio Base Context Bootstrapper
+    function ensureAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+                latencyHint: 'playback'
+            });
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
     }
 
     function saveAudioSettings() {
@@ -479,12 +489,11 @@
     }
 
     function toggleTimer() {
-        if (!audioCtx) {
-            try {
-                initAudio();
-            } catch (e) {
-                console.log("Audio warmup issue: ", e);
-            }
+        // Safe wakeup
+        try {
+            ensureAudioContext();
+        } catch(e) {
+            console.log("Context bootstrap blocked:", e);
         }
 
         if (timerId) {
@@ -502,7 +511,7 @@
                     logFocusMinute();
                 }
                 if (timeLeft < 0) {
-                    handlePhaseTransition(true); // pass true to play chime on automatic transition
+                    handlePhaseTransition(true);
                 }
                 updateDisplay();
             }, 1000);
@@ -515,7 +524,6 @@
         document.getElementById('startBtn').innerText = 'Start';
         stopAudio();
 
-        // Trigger dynamic synthesized audio notifications
         if (playAlert) {
             if (currentMode === 'focus') {
                 playChimeNotification('focusEnds');
@@ -546,7 +554,7 @@
     }
 
     function skipSession() {
-        handlePhaseTransition(false); // Skip intentionally, no notification chime needed
+        handlePhaseTransition(false); 
         updateDisplay();
     }
 
@@ -561,12 +569,11 @@
         updateDisplay();
     }
 
-    // --- Glitch-Resistant Audio Synthesis Engine ---
-    function initAudio() {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)({
-            latencyHint: 'playback'
-        });
-        
+    // --- Audio Synthesis Setup Handling ---
+    function initAudioNodes() {
+        if (!audioCtx) return;
+        if (oscL && oscR) return; // Node array already structurally map linked
+
         oscL = audioCtx.createOscillator();
         oscR = audioCtx.createOscillator();
         let pannerL = audioCtx.createStereoPanner();
@@ -580,5 +587,4 @@
 
         oscL.connect(pannerL).connect(gainNode);
         oscR.connect(pannerR).connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        updateFrequencies();
+  
