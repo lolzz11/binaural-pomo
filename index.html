@@ -394,7 +394,7 @@
 
         .profile-customizer-box {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
             background: #111115;
             padding: 0.75rem;
@@ -403,7 +403,6 @@
         }
 
         .avatar-display-bubble {
-            font-size: 1.7rem;
             background: #25252D;
             width: 44px;
             height: 44px;
@@ -411,7 +410,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            cursor: pointer;
+            color: var(--text-main);
             border: 1px solid rgba(255,255,255,0.1);
         }
 
@@ -458,7 +457,44 @@
             margin-top: 0.5rem;
         }
 
-        /* --- Social Engine Visual Components --- */
+        .avatar-grid-selector {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 1.25rem;
+        }
+
+        .grid-avatar-item {
+            background: #111115;
+            border: 1px solid #2D2D35;
+            color: var(--text-muted);
+            padding: 10px 0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .grid-avatar-item:hover {
+            color: var(--text-main);
+            border-color: #444450;
+            background: #181820;
+        }
+
+        .grid-avatar-item.active {
+            color: var(--theme-accent);
+            border-color: var(--theme-accent);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .avatar-display-bubble svg, .rank-identity-capsule svg, .friend-identity-capsule svg {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* --- Social Network Hub Styling --- */
         .social-network-hub {
             margin-top: 1.5rem;
             border-top: 1px solid var(--card-border);
@@ -527,6 +563,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            color: var(--text-main);
         }
 
         .rank-position-index {
@@ -544,8 +581,34 @@
             opacity: 0.6;
         }
         .remove-friend-btn:hover { opacity: 1; }
+
+        /* --- Custom Instructions Information Panel Box --- */
+        .social-matrix-guide-box {
+            background: #141419;
+            border: 1px dashed #2A2A35;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .social-matrix-guide-box ul {
+            margin: 0;
+            padding-left: 1.15rem;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.5;
+        }
+        
+        .social-matrix-guide-box li {
+            margin-bottom: 0.4rem;
+        }
+        
+        .social-matrix-guide-box li:last-child {
+            margin-bottom: 0;
+        }
     </style>
 
+    <!-- Unified Firebase & Vector Social Engine Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -565,22 +628,40 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let discoveredUserDoc = null; // Store query result references safely
+        let discoveredUserDoc = null;
+        let selectedAvatarKey = "ninja";
 
-        // Generate customized fallback display identity markers
+        const SVG_AVATARS = {
+            ninja: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+            bolt: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
+            target: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`,
+            activity: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>`,
+            cpu: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>`,
+            zap: `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`
+        };
+        const getAvatarSvg = (key) => SVG_AVATARS[key] || SVG_AVATARS['ninja'];
+
         const generateFallbackUsername = (email) => {
             return email.split('@')[0] + Math.floor(100 + Math.random() * 900);
         };
+
+        document.querySelectorAll('.grid-avatar-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.grid-avatar-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                selectedAvatarKey = item.getAttribute('data-avatar');
+            });
+        });
 
         window.firebaseSignUp = async (email, password) => {
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 await sendEmailVerification(cred.user);
-                alert("Account created successfully! A verification link has been shot to your inbox, just to make sure your email is YOURS ::laugh::");
+                alert("Account created! Verify your link inside your incoming mailbox.");
                 
                 const baseProfile = {
                     username: generateFallbackUsername(email),
-                    avatar: "🥷",
+                    avatar: "ninja",
                     totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
                     completedRounds: window.getStatsObject().completedRounds,
                     friendsList: []
@@ -604,7 +685,7 @@
             if(auth.currentUser) {
                 try {
                     await updatePassword(auth.currentUser, newPassword);
-                    alert("Security lock transformed. Password changed successfully!");
+                    alert("Security password changed successfully!");
                     document.getElementById('passwordDrawer').style.display = 'none';
                     document.getElementById('newPasswordInput').value = '';
                 } catch(err) { alert(err.message); }
@@ -623,7 +704,6 @@
             }
         };
 
-        // --- Social Engine Core Subroutines ---
         window.executeUsernameSearch = async (searchString) => {
             const feedbackCard = document.getElementById('searchFeedbackCard');
             feedbackCard.style.display = 'none';
@@ -631,7 +711,7 @@
 
             if(!searchString.trim()) return;
             if(searchString === document.getElementById('usernameDisplayLabel').innerText) {
-                alert("You cannot search or add yourself."); return;
+                alert("You cannot add yourself."); return;
             }
 
             try {
@@ -642,10 +722,14 @@
                     const snap = querySnapshot.docs[0];
                     discoveredUserDoc = { uid: snap.id, ...snap.data() };
                     
-                    document.getElementById('searchResultName').innerText = `${discoveredUserDoc.avatar} ${discoveredUserDoc.username}`;
+                    document.getElementById('searchResultName').innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            ${getAvatarSvg(discoveredUserDoc.avatar)} <span>${discoveredUserDoc.username}</span>
+                        </div>
+                    `;
                     feedbackCard.style.display = 'flex';
                 } else {
-                    alert("No matching flow runner found with that username.");
+                    alert("No matching runner found with that username.");
                 }
             } catch(e) { console.error(e); }
         };
@@ -659,7 +743,7 @@
                 });
                 document.getElementById('searchFeedbackCard').style.display = 'none';
                 document.getElementById('friendSearchInput').value = '';
-                alert(`Added ${discoveredUserDoc.username} to your focus sync matrix!`);
+                alert(`Added ${discoveredUserDoc.username} to your focus dashboard matrix!`);
                 window.refreshSocialHubData();
             } catch(e) { console.error(e); }
         };
@@ -677,7 +761,6 @@
         window.updateIdentityConfiguration = async (newUsername, newAvatar) => {
             if(!auth.currentUser) return;
             try {
-                // Pre-verify unique constraint requirements for username modifications
                 const q = query(collection(db, "users"), where("username", "==", newUsername));
                 const querySnapshot = await getDocs(q);
                 
@@ -692,7 +775,7 @@
                 });
                 
                 document.getElementById('usernameDisplayLabel').innerText = newUsername;
-                document.getElementById('avatarDisplayBubble').innerText = newAvatar;
+                document.getElementById('avatarDisplayBubble').innerHTML = getAvatarSvg(newAvatar);
                 alert("Profile configuration synchronized.");
                 window.refreshSocialHubData();
             } catch(e) { alert("Error saving profile changes."); }
@@ -712,7 +795,6 @@
                 friendsListContainer.innerHTML = '';
 
                 let networkProfiles = [];
-                // Add self profile matrix row
                 networkProfiles.push({
                     username: myData.username,
                     avatar: myData.avatar,
@@ -720,7 +802,6 @@
                     uid: auth.currentUser.uid
                 });
 
-                // Fetch details of synchronized friends
                 if(myData.friendsList && myData.friendsList.length > 0) {
                     for(const friendUid of myData.friendsList) {
                         const fSnap = await getDoc(doc(db, "users", friendUid));
@@ -728,11 +809,13 @@
                             const fData = fSnap.data();
                             networkProfiles.push({ uid: fSnap.id, ...fData });
 
-                            // Populate raw Friend Manager panel list elements
                             const fRow = document.createElement('div');
                             fRow.className = 'friend-row-item';
                             fRow.innerHTML = `
-                                <div class="friend-identity-capsule"><span>${fData.avatar}</span><strong>${fData.username}</strong></div>
+                                <div class="friend-identity-capsule">
+                                    ${getAvatarSvg(fData.avatar)}
+                                    <strong>${fData.username}</strong>
+                                </div>
                                 <button class="remove-friend-btn" onclick="removeFriendItem('${fSnap.id}')">Remove</button>
                             `;
                             friendsListContainer.appendChild(fRow);
@@ -740,10 +823,8 @@
                     }
                 }
 
-                // Execute JavaScript client-side sorting engine calculations to save pipeline reads
                 networkProfiles.sort((a, b) => b.totalFocusMinutes - a.totalFocusMinutes);
 
-                // Populate sorted leaderboard rows on interface layout architecture
                 networkProfiles.forEach((profile, index) => {
                     const row = document.createElement('div');
                     row.className = 'leaderboard-row-item';
@@ -754,7 +835,7 @@
                     row.innerHTML = `
                         <div class="rank-identity-capsule">
                             <span class="rank-position-index">#${index + 1}</span>
-                            <span>${profile.avatar}</span>
+                            ${getAvatarSvg(profile.avatar)}
                             <span>${profile.username} ${profile.uid === auth.currentUser.uid ? '(You)' : ''}</span>
                         </div>
                         <span style="font-weight:700;">${profile.totalFocusMinutes}m</span>
@@ -781,11 +862,18 @@
                 
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists()) {
-                    const cloudData = docSnap.exists() ? docSnap.data() : {};
+                    const cloudData = docSnap.data();
                     document.getElementById('usernameDisplayLabel').innerText = cloudData.username || generateFallbackUsername(user.email);
-                    document.getElementById('avatarDisplayBubble').innerText = cloudData.avatar || "🥷";
                     
-                    // Merge metrics logic safety engine configuration parameters
+                    const userAv = cloudData.avatar || "ninja";
+                    selectedAvatarKey = userAv;
+                    document.getElementById('avatarDisplayBubble').innerHTML = getAvatarSvg(userAv);
+                    
+                    document.querySelectorAll('.grid-avatar-item').forEach(i => {
+                        i.classList.remove('active');
+                        if(i.getAttribute('data-avatar') === userAv) i.classList.add('active');
+                    });
+
                     window.setStatsObject({
                         totalFocusMinutes: cloudData.totalFocusMinutes || window.getStatsObject().totalFocusMinutes,
                         completedRounds: cloudData.completedRounds || window.getStatsObject().completedRounds
@@ -799,6 +887,13 @@
                 discreteAuthLink.innerText = "Sign In (Optional)";
                 document.getElementById('passwordDrawer').style.display = 'none';
             }
+        });
+
+        document.getElementById('saveProfileBtn').addEventListener('click', () => {
+            const newUser = document.getElementById('editUsernameInput').value.trim();
+            if(!newUser || newUser.length < 3) { alert("Username is too short."); return; }
+            window.updateIdentityConfiguration(newUser, selectedAvatarKey);
+            document.getElementById('profileEditDrawer').style.display = 'none';
         });
     </script>
 </head>
@@ -878,7 +973,7 @@
                 <div class="panel-header" style="margin:0;">Active User Profile</div>
                 
                 <div class="profile-customizer-box">
-                    <div id="avatarDisplayBubble" class="avatar-display-bubble" title="Change Avatar Icon">🥷</div>
+                    <div id="avatarDisplayBubble" class="avatar-display-bubble" title="Change Avatar Icon"></div>
                     <div class="profile-text-fields">
                         <span id="usernameDisplayLabel" class="profile-username-tag">---</span>
                         <span id="userEmailDisplay" class="profile-email-subtext">---</span>
@@ -892,16 +987,31 @@
                 </div>
 
                 <div id="profileEditDrawer" class="sub-drawer-panel">
-                    <input type="text" id="editUsernameInput" placeholder="New Unique Username" style="margin-bottom:0.5rem;">
-                    <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:0.5rem;">Select Custom Profile Avatar Icon:</label>
-                    <select id="editAvatarSelect" style="width:100%; margin-bottom:0.75rem;">
-                        <option value="🥷">🥷 Shadow Ninja</option>
-                        <option value="🔥">🔥 Hyper Drive</option>
-                        <option value="🧘">🧘 Deep Flow</option>
-                        <option value="⚡">⚡ Focus Charge</option>
-                        <option value="🧠">🧠 Neural Sync</option>
-                        <option value="🚀">🚀 Apex Bound</option>
-                    </select>
+                    <input type="text" id="editUsernameInput" placeholder="New Unique Username" style="margin-bottom:1.25rem;">
+                    
+                    <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Select Premium Avatar State</label>
+                    
+                    <div class="avatar-grid-selector" id="avatarGridSelector">
+                        <div class="grid-avatar-item active" data-avatar="ninja" title="Shadow Ninja">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        </div>
+                        <div class="grid-avatar-item" data-avatar="bolt" title="Focus Charge">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        </div>
+                        <div class="grid-avatar-item" data-avatar="target" title="Deep Flow">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                        </div>
+                        <div class="grid-avatar-item" data-avatar="activity" title="Hyper Drive">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        </div>
+                        <div class="grid-avatar-item" data-avatar="cpu" title="Neural Sync">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line></svg>
+                        </div>
+                        <div class="grid-avatar-item" data-avatar="zap" title="Apex Bound">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                        </div>
+                    </div>
+                    
                     <button id="saveProfileBtn" class="auth-submit-btn">Save Identity Changes</button>
                 </div>
 
@@ -912,10 +1022,10 @@
             </div>
         </div>
 
+        <!-- Comprehensive Social Engine Synchronization Hub Deck Elements -->
         <div id="socialNetworkHub" class="social-network-hub" style="display:none;">
             <div class="panel-header">Synchronized Sync Leaderboard</div>
-            <div id="leaderboardList" class="leaderboard-list">
-                </div>
+            <div id="leaderboardList" class="leaderboard-list"></div>
 
             <div class="panel-header" style="margin-top:1.5rem;">Connect with Flow Runners</div>
             <div class="search-engine-input-wrapper">
@@ -928,16 +1038,24 @@
                 <button id="addFriendActionBtn" class="search-engine-btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Add Friend</button>
             </div>
 
-            <div class="panel-header" style="margin-top:1.25rem; font-size:0.7rem;">Your Friends Matrix</div>
-            <div id="friendsListContainer" class="friends-list-container">
-                </div>
+            <div class="panel-header" style="margin-top:1.25rem; font-size:0.75rem;">Your Friend List Ranking</div>
+            <div id="friendsListContainer" class="friends-list-container"></div>
+
+            <!-- Contextual Instructions Info Panel Box Component -->
+            <div class="social-matrix-guide-box">
+                <div class="panel-header" style="font-size:0.65rem; margin-bottom:0.5rem; color:var(--text-main);">How the Friend List Works</div>
+                <ul>
+                    <li><strong>Global Connectivity:</strong> Search your friend's exact unique username to add them directly into your hub view.</li>
+                    <li><strong>Real-Time Leaderboard:</strong> Your metrics rank automatically against your friends based on total accumulated focus minutes.</li>
+                    <li><strong>Auto-Sync Engine:</strong> Every focus minute you log automatically updates the board, keeping your workspace competitive and accurate.</li>
+                </ul>
+            </div>
         </div>
 
     </div>
 </div>
 
 <script>
-    // --- Safe Interface Bridges For Moduled Architecture ---
     let stats = { totalFocusMinutes: 0, completedRounds: 0 };
     window.getStatsObject = () => stats;
     window.setStatsObject = (newStats) => {
@@ -960,7 +1078,6 @@
     let oscR = null;
     let gainNode = null;
 
-    // --- Core UI Node DOM Mappings ---
     const startBtn = document.getElementById('startBtn');
     const skipBtn = document.getElementById('skipBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -972,7 +1089,6 @@
     const authPanel = document.getElementById('authPanel');
     const pwaInstallBtn = document.getElementById('pwaInstallBtn');
 
-    // Authentication UI Layout Hooks
     const tabLogin = document.getElementById('tabLogin');
     const tabSignup = document.getElementById('tabSignup');
     const authSubmitAction = document.getElementById('authSubmitAction');
@@ -981,10 +1097,8 @@
     const submitNewPasswordBtn = document.getElementById('submitNewPasswordBtn');
     const logoutBtn = document.getElementById('logoutBtn');
 
-    // Social Dashboard Architecture Layout Mappings
     const editProfileBtn = document.getElementById('editProfileBtn');
     const profileEditDrawer = document.getElementById('profileEditDrawer');
-    const saveProfileBtn = document.getElementById('saveProfileBtn');
     const friendSearchBtn = document.getElementById('friendSearchBtn');
     const addFriendActionBtn = document.getElementById('addFriendActionBtn');
 
@@ -1113,7 +1227,6 @@
         toggleTimer();
     }
 
-    // --- Audio Synthesis Pipeline Drivers ---
     function initAudioNodes() {
         if (!audioToggle.checked) return;
         if (!audioCtx || (oscL && oscR)) return;
@@ -1187,7 +1300,6 @@
         }
     }
 
-    // --- Hard-Wired Operational System Event Listeners ---
     startBtn.addEventListener('click', toggleTimer);
     
     skipBtn.addEventListener('click', () => {
@@ -1274,23 +1386,11 @@
 
     logoutBtn.addEventListener('click', () => { if(window.firebaseLogOut) window.firebaseLogOut(); });
 
-    // --- Interactive Social System Event Mappings ---
     editProfileBtn.addEventListener('click', () => {
+        profileEditDrawer.style.display = (profileEditDrawer.style.display === 'block') ? 'none' : 'block';
         if(profileEditDrawer.style.display === 'block') {
-            profileEditDrawer.style.display = 'none';
-        } else {
             document.getElementById('editUsernameInput').value = document.getElementById('usernameDisplayLabel').innerText;
-            document.getElementById('editAvatarSelect').value = document.getElementById('avatarDisplayBubble').innerText;
-            profileEditDrawer.style.display = 'block';
         }
-    });
-
-    saveProfileBtn.addEventListener('click', () => {
-        const newUser = document.getElementById('editUsernameInput').value.trim();
-        const newAv = document.getElementById('editAvatarSelect').value;
-        if(!newUser || newUser.length < 3) { alert("Username is too short."); return; }
-        if(window.updateIdentityConfiguration) window.updateIdentityConfiguration(newUser, newAv);
-        profileEditDrawer.style.display = 'none';
     });
 
     friendSearchBtn.addEventListener('click', () => {
@@ -1302,16 +1402,14 @@
         if(window.addDiscoveredFriend) window.addDiscoveredFriend();
     });
 
-    // --- App Lifecycle Initialization Bootstrappers ---
     loadAudioSettings();
     loadStats();
     updateDisplay();
 
-    // --- Progressive Web App Management Engine ---
     let deferredPrompt = null;
     if ('serviceWorker' in navigator) {
         const swCode = `
-            const CACHE_NAME = 'binaural-flow-v55';
+            const CACHE_NAME = 'binaural-flow-v56';
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
         `;
