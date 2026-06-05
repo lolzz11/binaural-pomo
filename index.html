@@ -340,7 +340,7 @@
             background: #111115;
             border-radius: 10px;
             padding: 4px;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
         }
 
         .auth-tab {
@@ -362,10 +362,23 @@
         }
         
         .auth-notice {
-            font-size: 0.75rem;
+            background: #121216;
+            border: 1px solid #23232b;
+            border-radius: 12px;
+            padding: 0.85rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
-            line-height: 1.4;
+            line-height: 1.45;
             margin-bottom: 1.25rem;
+        }
+
+        .auth-notice ul {
+            margin: 0.4rem 0 0 0;
+            padding-left: 1.1rem;
+        }
+
+        .auth-notice li {
+            margin-bottom: 0.25rem;
         }
 
         .auth-panel input {
@@ -582,7 +595,6 @@
         }
         .remove-friend-btn:hover { opacity: 1; }
 
-        /* --- Custom Instructions Information Panel Box --- */
         .social-matrix-guide-box {
             background: #141419;
             border: 1px dashed #2A2A35;
@@ -961,9 +973,17 @@
                     <button id="tabLogin" class="auth-tab active">Log In</button>
                     <button id="tabSignup" class="auth-tab">Create Account</button>
                 </div>
+                
+                <!-- Enhanced Contextual System Feature Introduction Box -->
                 <div class="auth-notice">
-                    Login option only serves the purpose of saving your stats. If you don't want to sync it you don't need to login.
+                    <strong>Why connect an account?</strong> Creating a profile is optional, but it unlocks our global synchronization engine:
+                    <ul>
+                        <li><strong>Cloud Stat Backup:</strong> Keep your cumulative focus minutes and cleared rounds safe across device updates.</li>
+                        <li><strong>Friend Lists &amp; Rankings:</strong> Connect with fellow runners to stack your daily progress against each other on real-time leaderboards.</li>
+                        <li><strong>Custom Identity Vectors:</strong> Personalize your dashboard footprint by selecting unique premium styling vector avatars.</li>
+                    </ul>
                 </div>
+                
                 <input type="email" id="authEmail" placeholder="Email Address">
                 <input type="password" id="authPassword" placeholder="Password">
                 <button id="authSubmitAction" class="auth-submit-btn">Log In</button>
@@ -1041,7 +1061,6 @@
             <div class="panel-header" style="margin-top:1.25rem; font-size:0.75rem;">Your Friend List Ranking</div>
             <div id="friendsListContainer" class="friends-list-container"></div>
 
-            <!-- Contextual Instructions Info Panel Box Component -->
             <div class="social-matrix-guide-box">
                 <div class="panel-header" style="font-size:0.65rem; margin-bottom:0.5rem; color:var(--text-main);">How the Friend List Works</div>
                 <ul>
