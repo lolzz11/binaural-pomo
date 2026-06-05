@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#121214">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2316161a%22/><text y=%22.9em%22 font-size=%2280%22 x=%2210%22>⚡</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%2316161a%22/><circle cx=%2250%22 cy=%2250%22 r=%2222%22 fill=%22none%22 stroke=%22%237E7E86%22 stroke-width=%225%22/><circle cx=%2250%22 cy=%2250%22 r=%228%22 fill=%22%237E7E86%22/></svg>">
 
     <script>
         const manifestObj = {
@@ -21,7 +21,7 @@
             "orientation": "portrait",
             "icons": [
                 {
-                    "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2316161a%22/><text y=%22.9em%22 font-size=%2280%22 x=%2210%22>⚡</text></svg>",
+                    "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%2316161a%22/><circle cx=%2250%22 cy=%2250%22 r=%2222%22 fill=%22none%22 stroke=%22%237E7E86%22 stroke-width=%225%22/><circle cx=%2250%22 cy=%2250%22 r=%228%22 fill=%22%237E7E86%22/></svg>",
                     "sizes": "512x512",
                     "type": "image/svg+xml",
                     "purpose": "any maskable"
@@ -482,7 +482,6 @@
     }
 
     function toggleTimer() {
-        // Safe Audio Context Bootstrapper to bypass browser security blocks
         if (!audioCtx && document.getElementById('audioToggle').checked) {
             try {
                 initAudio();
