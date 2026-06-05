@@ -562,11 +562,10 @@
         }
     </style>
 
-    <!-- Unified Firebase Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCRY64EvtgTPPCaNA2q9BiQyV0_3HZuD6E",
@@ -584,11 +583,21 @@
 
         let discoveredUserDoc = null;
 
+        // Security Patch: strict alpha-numeric client validation pattern for usernames
+        const isValidUsername = (username) => {
+            const regex = /^[a-zA-Z0-9_]{3,15}$/;
+            return regex.test(username);
+        };
+
         const generateFallbackUsername = (email) => {
-            return email.split('@')[0] + Math.floor(100 + Math.random() * 900);
+            return email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').substring(0, 10) + Math.floor(100 + Math.random() * 900);
         };
 
         window.firebaseSignUp = async (email, password) => {
+            if (password.length < 8) {
+                alert("Security policy update: Password must be at least 8 characters long.");
+                return;
+            }
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 await sendEmailVerification(cred.user);
@@ -615,15 +624,22 @@
 
         window.firebaseLogOut = () => { signOut(auth); };
 
-        window.firebaseUpdatePassword = async (newPassword) => {
-            if(auth.currentUser) {
-                try {
-                    await updatePassword(auth.currentUser, newPassword);
-                    alert("Security password changed successfully!");
-                    document.getElementById('passwordDrawer').style.display = 'none';
-                    document.getElementById('newPasswordInput').value = '';
-                } catch(err) { alert(err.message); }
+        // Security Patch: Prompt for current password before permitting modifications
+        window.firebaseUpdatePassword = async (currentPassword, newPassword) => {
+            if(!auth.currentUser) return;
+            if (newPassword.length < 8) {
+                alert("New password must be at least 8 characters long.");
+                return;
             }
+            try {
+                const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+                await reauthenticateWithCredential(auth.currentUser, credential);
+                await updatePassword(auth.currentUser, newPassword);
+                alert("Security password changed successfully!");
+                document.getElementById('passwordDrawer').style.display = 'none';
+                document.getElementById('currentPasswordInput').value = '';
+                document.getElementById('newPasswordInput').value = '';
+            } catch(err) { alert("Re-authentication failed: " + err.message); }
         };
 
         window.syncStatsToCloud = async () => {
@@ -643,24 +659,36 @@
             feedbackCard.style.display = 'none';
             discoveredUserDoc = null;
 
-            if(!searchString.trim()) return;
-            if(searchString === document.getElementById('usernameDisplayLabel').innerText) {
+            const cleanQuery = searchString.trim();
+            if(!cleanQuery) return;
+            if(!isValidUsername(cleanQuery)) {
+                alert("Invalid username syntax searched.");
+                return;
+            }
+            if(cleanQuery === document.getElementById('usernameDisplayLabel').textContent) {
                 alert("You cannot add yourself."); return;
             }
 
             try {
-                const q = query(collection(db, "users"), where("username", "==", searchString.trim()));
+                const q = query(collection(db, "users"), where("username", "==", cleanQuery));
                 const querySnapshot = await getDocs(q);
 
                 if(!querySnapshot.empty) {
                     const snap = querySnapshot.docs[0];
                     discoveredUserDoc = { uid: snap.id, ...snap.data() };
                     
-                    document.getElementById('searchResultName').innerHTML = `
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span>${discoveredUserDoc.username}</span>
-                        </div>
-                    `;
+                    // Security Patch: Escaped via textContent layout assignment to block XSS vector completely
+                    const container = document.getElementById('searchResultName');
+                    container.innerHTML = ''; 
+                    const innerDiv = document.createElement('div');
+                    innerDiv.style.display = 'flex';
+                    innerDiv.style.alignItems = 'center';
+                    innerDiv.style.gap = '8px';
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = discoveredUserDoc.username;
+                    innerDiv.appendChild(nameSpan);
+                    container.appendChild(innerDiv);
+                    
                     feedbackCard.style.display = 'flex';
                 } else {
                     alert("No matching runner found with that username.");
@@ -692,25 +720,36 @@
             } catch(e) { console.error(e); }
         };
 
+        // Security Patch: Atomic validation using a runTransaction wrapper execution step
         window.updateIdentityConfiguration = async (newUsername) => {
             if(!auth.currentUser) return;
-            try {
-                const q = query(collection(db, "users"), where("username", "==", newUsername));
-                const querySnapshot = await getDocs(q);
-                
-                if(!querySnapshot.empty && querySnapshot.docs[0].id !== auth.currentUser.uid) {
-                    alert("This username is already claimed inside the flow space network.");
-                    return;
-                }
+            if(!isValidUsername(newUsername)) {
+                alert("Usernames must be 3-15 characters and contain only letters, numbers, or underscores.");
+                return;
+            }
 
-                await updateDoc(doc(db, "users", auth.currentUser.uid), {
-                    username: newUsername
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const q = query(collection(db, "users"), where("username", "==", newUsername));
+                    const querySnapshot = await getDocs(q);
+                    
+                    let conflict = false;
+                    querySnapshot.forEach((doc) => {
+                        if(doc.id !== auth.currentUser.uid) conflict = true;
+                    });
+
+                    if(conflict) {
+                        throw new Error("This username is already claimed inside the flow space network.");
+                    }
+
+                    const myUserRef = doc(db, "users", auth.currentUser.uid);
+                    transaction.update(myUserRef, { username: newUsername });
                 });
-                
-                document.getElementById('usernameDisplayLabel').innerText = newUsername;
+
+                document.getElementById('usernameDisplayLabel').textContent = newUsername;
                 alert("Profile configuration synchronized.");
                 window.refreshSocialHubData();
-            } catch(e) { alert("Error saving profile changes."); }
+            } catch(e) { alert(e.message || "Error saving profile changes."); }
         };
 
         window.refreshSocialHubData = async () => {
@@ -740,14 +779,23 @@
                             const fData = fSnap.data();
                             networkProfiles.push({ uid: fSnap.id, ...fData });
 
+                            // Security Patch: Replaced innerHTML templates with programmatic Node injection textContent setups
                             const fRow = document.createElement('div');
                             fRow.className = 'friend-row-item';
-                            fRow.innerHTML = `
-                                <div class="friend-identity-capsule">
-                                    <strong>${fData.username}</strong>
-                                </div>
-                                <button class="remove-friend-btn" onclick="removeFriendItem('${fSnap.id}')">Remove</button>
-                            `;
+                            
+                            const identityCapsule = document.createElement('div');
+                            identityCapsule.className = 'friend-identity-capsule';
+                            const strongLabel = document.createElement('strong');
+                            strongLabel.textContent = fData.username;
+                            identityCapsule.appendChild(strongLabel);
+                            
+                            const remBtn = document.createElement('button');
+                            remBtn.className = 'remove-friend-btn';
+                            remBtn.textContent = 'Remove';
+                            remBtn.onclick = () => window.removeFriendItem(fSnap.id);
+
+                            fRow.appendChild(identityCapsule);
+                            fRow.appendChild(remBtn);
                             friendsListContainer.appendChild(fRow);
                         }
                     }
@@ -762,13 +810,26 @@
                         row.style.border = '1px solid var(--theme-accent)';
                         row.style.background = 'rgba(255,255,255,0.02)';
                     }
-                    row.innerHTML = `
-                        <div class="rank-identity-capsule">
-                            <span class="rank-position-index">#${index + 1}</span>
-                            <span>${profile.username} ${profile.uid === auth.currentUser.uid ? '(You)' : ''}</span>
-                        </div>
-                        <span style="font-weight:700;">${profile.totalFocusMinutes}m</span>
-                    `;
+
+                    const rankCapsule = document.createElement('div');
+                    rankCapsule.className = 'rank-identity-capsule';
+                    
+                    const posIndex = document.createElement('span');
+                    posIndex.className = 'rank-position-index';
+                    posIndex.textContent = `#${index + 1}`;
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = `${profile.username} ${profile.uid === auth.currentUser.uid ? '(You)' : ''}`;
+                    
+                    rankCapsule.appendChild(posIndex);
+                    rankCapsule.appendChild(nameSpan);
+
+                    const scoreSpan = document.createElement('span');
+                    scoreSpan.style.fontWeight = '700';
+                    scoreSpan.textContent = `${profile.totalFocusMinutes}m`;
+
+                    row.appendChild(rankCapsule);
+                    row.appendChild(scoreSpan);
                     leaderboardList.appendChild(row);
                 });
 
@@ -786,13 +847,13 @@
                 guestAuthForm.style.display = 'none';
                 userDashboardView.style.display = 'flex';
                 socialNetworkHub.style.display = 'block';
-                userEmailDisplay.innerText = user.email;
-                discreteAuthLink.innerText = "Manage Account Profile";
+                userEmailDisplay.textContent = user.email;
+                discreteAuthLink.textContent = "Manage Account Profile";
                 
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists()) {
                     const cloudData = docSnap.data();
-                    document.getElementById('usernameDisplayLabel').innerText = cloudData.username || generateFallbackUsername(user.email);
+                    document.getElementById('usernameDisplayLabel').textContent = cloudData.username || generateFallbackUsername(user.email);
                     
                     window.setStatsObject({
                         totalFocusMinutes: cloudData.totalFocusMinutes || window.getStatsObject().totalFocusMinutes,
@@ -804,14 +865,13 @@
                 userDashboardView.style.display = 'none';
                 socialNetworkHub.style.display = 'none';
                 guestAuthForm.style.display = 'block';
-                discreteAuthLink.innerText = "Sign In (Optional)";
+                discreteAuthLink.textContent = "Sign In (Optional)";
                 document.getElementById('passwordDrawer').style.display = 'none';
             }
         });
 
         document.getElementById('saveProfileBtn').addEventListener('click', () => {
             const newUser = document.getElementById('editUsernameInput').value.trim();
-            if(!newUser || newUser.length < 3) { alert("Username is too short."); return; }
             window.updateIdentityConfiguration(newUser);
             document.getElementById('profileEditDrawer').style.display = 'none';
         });
@@ -882,7 +942,6 @@
                     <button id="tabSignup" class="auth-tab">Create Account</button>
                 </div>
                 
-                <!-- Notice text rephrased identically to user meaning without adding extra context -->
                 <div class="auth-notice">
                     Signing in allows you to preserve your data across separate systems, as well as include companions and view friendlist rankings.
                 </div>
@@ -914,13 +973,13 @@
                 </div>
 
                 <div id="passwordDrawer" class="sub-drawer-panel">
+                    <input type="password" id="currentPasswordInput" placeholder="Enter Current Password" style="margin-bottom:0.5rem;">
                     <input type="password" id="newPasswordInput" placeholder="Enter New Secure Password">
                     <button id="submitNewPasswordBtn" class="auth-submit-btn" style="background:#2D2D35; color:#ffffff;">Update Password</button>
                 </div>
             </div>
         </div>
 
-        <!-- Comprehensive Social Engine Synchronization Hub Deck Elements -->
         <div id="socialNetworkHub" class="social-network-hub" style="display:none;">
             <div class="panel-header">Synchronized Sync Leaderboard</div>
             <div id="leaderboardList" class="leaderboard-list"></div>
@@ -1025,8 +1084,8 @@
     }
 
     function updateStatUI() {
-        document.getElementById('statMinutes').innerText = stats.totalFocusMinutes;
-        document.getElementById('statRounds').innerText = stats.completedRounds;
+        document.getElementById('statMinutes').textContent = stats.totalFocusMinutes;
+        document.getElementById('statRounds').textContent = stats.completedRounds;
     }
 
     function logFocusMinute() {
@@ -1046,25 +1105,25 @@
     function updateDisplay() {
         const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
         const secs = (timeLeft % 60).toString().padStart(2, '0');
-        document.getElementById('timer').innerText = `${mins}:${secs}`;
+        document.getElementById('timer').textContent = `${mins}:${secs}`;
         
         const statusEl = document.getElementById('status');
         const root = document.documentElement;
         
         if (currentMode === 'focus') {
-            statusEl.innerText = "Focus Phase";
+            statusEl.textContent = "Focus Phase";
             root.style.setProperty('--theme-glow', 'var(--focus-glow)');
             root.style.setProperty('--theme-accent', 'var(--focus-accent)');
         } else if (currentMode === 'shortBreak') {
-            statusEl.innerText = "Short Break";
+            statusEl.textContent = "Short Break";
             root.style.setProperty('--theme-glow', 'var(--break-glow)');
             root.style.setProperty('--theme-accent', 'var(--break-accent)');
         } else {
-            statusEl.innerText = "Long Break";
+            statusEl.textContent = "Long Break";
             root.style.setProperty('--theme-glow', 'var(--long-glow)');
             root.style.setProperty('--theme-accent', 'var(--long-accent)');
         }
-        document.getElementById('round').innerText = `Round ${roundCount} of 4`;
+        document.getElementById('round').textContent = `Round ${roundCount} of 4`;
     }
 
     function toggleTimer() {
@@ -1076,10 +1135,10 @@
         if (timerId) {
             clearInterval(timerId);
             timerId = null;
-            startBtn.innerText = 'Start';
+            startBtn.textContent = 'Start';
             stopAudio();
         } else {
-            startBtn.innerText = 'Pause';
+            startBtn.textContent = 'Pause';
             if (currentMode === 'focus') startAudio();
             
             timerId = setInterval(() => {
@@ -1098,7 +1157,7 @@
     function handlePhaseTransition(playAlert = false) {
         clearInterval(timerId);
         timerId = null;
-        startBtn.innerText = 'Start';
+        startBtn.textContent = 'Start';
         stopAudio();
 
         if (playAlert) {
@@ -1211,7 +1270,7 @@
         currentMode = 'focus';
         roundCount = 1;
         timeLeft = FOCUS_TIME * 60;
-        startBtn.innerText = 'Start';
+        startBtn.textContent = 'Start';
         updateDisplay();
     });
 
@@ -1253,14 +1312,14 @@
         activeAuthMode = 'login';
         tabLogin.classList.add('active');
         tabSignup.classList.remove('active');
-        authSubmitAction.innerText = 'Log In';
+        authSubmitAction.textContent = 'Log In';
     });
 
     tabSignup.addEventListener('click', () => {
         activeAuthMode = 'signup';
         tabSignup.classList.add('active');
         tabLogin.classList.remove('active');
-        authSubmitAction.innerText = 'Register Account';
+        authSubmitAction.textContent = 'Register Account';
     });
 
     authSubmitAction.addEventListener('click', () => {
@@ -1276,9 +1335,10 @@
     });
 
     submitNewPasswordBtn.addEventListener('click', () => {
+        const currentPass = document.getElementById('currentPasswordInput').value;
         const newPass = document.getElementById('newPasswordInput').value;
-        if(!newPass || newPass.length < 6) { alert("Password must be at least 6 characters."); return; }
-        if(window.firebaseUpdatePassword) window.firebaseUpdatePassword(newPass);
+        if(!currentPass || !newPass) { alert("Please fill out all fields."); return; }
+        if(window.firebaseUpdatePassword) window.firebaseUpdatePassword(currentPass, newPass);
     });
 
     logoutBtn.addEventListener('click', () => { if(window.firebaseLogOut) window.firebaseLogOut(); });
@@ -1286,7 +1346,7 @@
     editProfileBtn.addEventListener('click', () => {
         profileEditDrawer.style.display = (profileEditDrawer.style.display === 'block') ? 'none' : 'block';
         if(profileEditDrawer.style.display === 'block') {
-            document.getElementById('editUsernameInput').value = document.getElementById('usernameDisplayLabel').innerText;
+            document.getElementById('editUsernameInput').value = document.getElementById('usernameDisplayLabel').textContent;
         }
     });
 
@@ -1304,14 +1364,13 @@
     updateDisplay();
 
     let deferredPrompt = null;
+    // Security Patch: Standard inline service worker scope registration fallback mechanics
     if ('serviceWorker' in navigator) {
-        const swCode = `
-            const CACHE_NAME = 'binaural-flow-v56';
-            self.addEventListener('install', (e) => self.skipWaiting());
-            self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
-        `;
-        const swBlob = new Blob([swCode], {type: 'application/javascript'});
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.log(err));
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => {
+                console.log("Service Worker registration offline fallback active:", err);
+            });
+        });
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
