@@ -79,12 +79,11 @@
             padding: 2.5rem 2rem;
             border-radius: 24px;
             width: 100%;
-            max-width: 390px;
+            max-width: 410px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             position: relative;
             overflow: hidden;
             transition: border-color 0.4s ease;
-            text-align: center;
         }
 
         .app-shell::before {
@@ -145,6 +144,7 @@
             border-radius: 100px;
             margin-bottom: 0.5rem;
             transition: color 0.4s ease;
+            text-align: center;
         }
 
         .timer-display {
@@ -236,16 +236,15 @@
             color: #C4C4C6;
         }
 
-        select {
-            background: #1F1F24;
+        select, .auth-panel input {
+            background: #111115;
             color: var(--text-main);
             border: 1px solid #2D2D35;
-            padding: 0.5rem 0.75rem;
+            padding: 0.65rem 0.75rem;
             border-radius: 10px;
             font-size: 0.85rem;
             font-weight: 500;
             outline: none;
-            cursor: pointer;
         }
 
         input[type="checkbox"] {
@@ -270,10 +269,6 @@
             border-radius: 50%;
             background: var(--text-main);
             cursor: pointer;
-            transition: transform 0.1s;
-        }
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
         }
 
         .dashboard-grid {
@@ -313,9 +308,7 @@
             cursor: pointer;
             float: right;
             opacity: 0.6;
-            transition: opacity 0.2s;
         }
-        .reset-link:hover { opacity: 1; }
 
         .discrete-auth-toggle {
             display: block;
@@ -329,11 +322,8 @@
             cursor: pointer;
             text-align: center;
             opacity: 0.5;
-            transition: opacity 0.2s;
         }
-        .discrete-auth-toggle:hover { opacity: 1; }
 
-        /* --- Overhauled Interactive Account Panel System --- */
         .auth-panel {
             background: #1A1A1F;
             border: 1px solid var(--card-border);
@@ -341,10 +331,8 @@
             padding: 1.5rem;
             margin-top: 1rem;
             display: none;
-            text-align: left;
             width: 100%;
             box-sizing: border-box;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .auth-nav-tabs {
@@ -353,7 +341,6 @@
             border-radius: 10px;
             padding: 4px;
             margin-bottom: 1.25rem;
-            border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .auth-tab {
@@ -366,14 +353,12 @@
             font-weight: 600;
             cursor: pointer;
             border-radius: 7px;
-            transition: all 0.2s ease;
             text-align: center;
         }
 
         .auth-tab.active {
             background: #25252D;
             color: var(--text-main);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         
         .auth-notice {
@@ -381,27 +366,12 @@
             color: var(--text-muted);
             line-height: 1.4;
             margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .auth-panel input {
             width: 100%;
             box-sizing: border-box;
-            background: #111115;
-            border: 1px solid #2D2D35;
-            color: var(--text-main);
-            padding: 0.75rem;
-            border-radius: 10px;
             margin-bottom: 0.75rem;
-            font-size: 0.85rem;
-            outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .auth-panel input:focus {
-            border-color: var(--theme-accent);
-            box-shadow: 0 0 0 3px var(--theme-glow);
         }
 
         .auth-submit-btn {
@@ -414,31 +384,53 @@
             font-weight: 700;
             border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(255,255,255,0.05);
-            margin-top: 0.25rem;
-        }
-        .auth-submit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(255,255,255,0.1);
         }
         
-        /* Authenticated UI Layout Elements */
         .user-dashboard-view {
             display: none;
             flex-direction: column;
             gap: 1rem;
         }
 
-        .user-badge-header {
-            font-size: 0.85rem;
-            color: #C4C4C6;
-            font-weight: 600;
+        .profile-customizer-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
             background: #111115;
-            padding: 0.75rem 1rem;
-            border-radius: 10px;
+            padding: 0.75rem;
+            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.02);
-            word-break: break-all;
+        }
+
+        .avatar-display-bubble {
+            font-size: 1.7rem;
+            background: #25252D;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .profile-text-fields {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .profile-username-tag {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .profile-email-subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
 
         .nested-action-row {
@@ -457,13 +449,6 @@
             font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-        .btn-nested-action:hover {
-            background: #212126;
-            color: var(--text-main);
-            border-color: #444450;
         }
 
         .sub-drawer-panel {
@@ -472,13 +457,99 @@
             padding-top: 1rem;
             margin-top: 0.5rem;
         }
+
+        /* --- Social Engine Visual Components --- */
+        .social-network-hub {
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--card-border);
+            padding-top: 1.5rem;
+            text-align: left;
+            width: 100%;
+        }
+
+        .search-engine-input-wrapper {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .search-engine-input-wrapper input {
+            flex-grow: 1;
+            background: #1A1A1F;
+            border: 1px solid #2D2D35;
+            color: var(--text-main);
+            padding: 0.6rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .search-engine-btn {
+            background: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .search-feedback-card {
+            display: none;
+            background: #111115;
+            border: 1px solid #232329;
+            padding: 0.75rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .leaderboard-list, .friends-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .leaderboard-row-item, .friend-row-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #111115;
+            padding: 0.65rem 0.85rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+        }
+
+        .rank-identity-capsule, .friend-identity-capsule {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rank-position-index {
+            font-weight: 800;
+            color: var(--theme-accent);
+            width: 16px;
+        }
+
+        .remove-friend-btn {
+            background: none;
+            border: none;
+            color: #EF4444;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+        .remove-friend-btn:hover { opacity: 1; }
     </style>
 
-    <!-- Unified Firebase Injection Module Layer -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCRY64EvtgTPPCaNA2q9BiQyV0_3HZuD6E",
@@ -494,15 +565,28 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        let discoveredUserDoc = null; // Store query result references safely
+
+        // Generate customized fallback display identity markers
+        const generateFallbackUsername = (email) => {
+            return email.split('@')[0] + Math.floor(100 + Math.random() * 900);
+        };
+
         window.firebaseSignUp = async (email, password) => {
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
-                
-                // Trigger customized interactive email verification layer
                 await sendEmailVerification(cred.user);
                 alert("Account created successfully! A verification link has been shot to your inbox, just to make sure your email is YOURS ::laugh::");
                 
-                await setDoc(doc(db, "users", cred.user.uid), window.getStatsObject());
+                const baseProfile = {
+                    username: generateFallbackUsername(email),
+                    avatar: "🥷",
+                    totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
+                    completedRounds: window.getStatsObject().completedRounds,
+                    friendsList: []
+                };
+
+                await setDoc(doc(db, "users", cred.user.uid), baseProfile);
                 document.getElementById('authPanel').style.display = 'none';
             } catch (err) { alert(err.message); }
         };
@@ -530,9 +614,155 @@
         window.syncStatsToCloud = async () => {
             if (auth.currentUser) {
                 try {
-                    await setDoc(doc(db, "users", auth.currentUser.uid), window.getStatsObject());
+                    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+                        totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
+                        completedRounds: window.getStatsObject().completedRounds
+                    });
+                    window.refreshSocialHubData();
                 } catch(e) { console.error("Cloud sync paused:", e); }
             }
+        };
+
+        // --- Social Engine Core Subroutines ---
+        window.executeUsernameSearch = async (searchString) => {
+            const feedbackCard = document.getElementById('searchFeedbackCard');
+            feedbackCard.style.display = 'none';
+            discoveredUserDoc = null;
+
+            if(!searchString.trim()) return;
+            if(searchString === document.getElementById('usernameDisplayLabel').innerText) {
+                alert("You cannot search or add yourself."); return;
+            }
+
+            try {
+                const q = query(collection(db, "users"), where("username", "==", searchString.trim()));
+                const querySnapshot = await getDocs(q);
+
+                if(!querySnapshot.empty) {
+                    const snap = querySnapshot.docs[0];
+                    discoveredUserDoc = { uid: snap.id, ...snap.data() };
+                    
+                    document.getElementById('searchResultName').innerText = `${discoveredUserDoc.avatar} ${discoveredUserDoc.username}`;
+                    feedbackCard.style.display = 'flex';
+                } else {
+                    alert("No matching flow runner found with that username.");
+                }
+            } catch(e) { console.error(e); }
+        };
+
+        window.addDiscoveredFriend = async () => {
+            if(!auth.currentUser || !discoveredUserDoc) return;
+            try {
+                const myDocRef = doc(db, "users", auth.currentUser.uid);
+                await updateDoc(myDocRef, {
+                    friendsList: arrayUnion(discoveredUserDoc.uid)
+                });
+                document.getElementById('searchFeedbackCard').style.display = 'none';
+                document.getElementById('friendSearchInput').value = '';
+                alert(`Added ${discoveredUserDoc.username} to your focus sync matrix!`);
+                window.refreshSocialHubData();
+            } catch(e) { console.error(e); }
+        };
+
+        window.removeFriendItem = async (friendUid) => {
+            if(!auth.currentUser) return;
+            try {
+                await updateDoc(doc(db, "users", auth.currentUser.uid), {
+                    friendsList: arrayRemove(friendUid)
+                });
+                window.refreshSocialHubData();
+            } catch(e) { console.error(e); }
+        };
+
+        window.updateIdentityConfiguration = async (newUsername, newAvatar) => {
+            if(!auth.currentUser) return;
+            try {
+                // Pre-verify unique constraint requirements for username modifications
+                const q = query(collection(db, "users"), where("username", "==", newUsername));
+                const querySnapshot = await getDocs(q);
+                
+                if(!querySnapshot.empty && querySnapshot.docs[0].id !== auth.currentUser.uid) {
+                    alert("This username is already claimed inside the flow space network.");
+                    return;
+                }
+
+                await updateDoc(doc(db, "users", auth.currentUser.uid), {
+                    username: newUsername,
+                    avatar: newAvatar
+                });
+                
+                document.getElementById('usernameDisplayLabel').innerText = newUsername;
+                document.getElementById('avatarDisplayBubble').innerText = newAvatar;
+                alert("Profile configuration synchronized.");
+                window.refreshSocialHubData();
+            } catch(e) { alert("Error saving profile changes."); }
+        };
+
+        window.refreshSocialHubData = async () => {
+            if(!auth.currentUser) return;
+            try {
+                const myDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+                if(!myDoc.exists()) return;
+                const myData = myDoc.data();
+
+                const leaderboardList = document.getElementById('leaderboardList');
+                const friendsListContainer = document.getElementById('friendsListContainer');
+                
+                leaderboardList.innerHTML = '';
+                friendsListContainer.innerHTML = '';
+
+                let networkProfiles = [];
+                // Add self profile matrix row
+                networkProfiles.push({
+                    username: myData.username,
+                    avatar: myData.avatar,
+                    totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
+                    uid: auth.currentUser.uid
+                });
+
+                // Fetch details of synchronized friends
+                if(myData.friendsList && myData.friendsList.length > 0) {
+                    for(const friendUid of myData.friendsList) {
+                        const fSnap = await getDoc(doc(db, "users", friendUid));
+                        if(fSnap.exists()) {
+                            const fData = fSnap.data();
+                            networkProfiles.push({ uid: fSnap.id, ...fData });
+
+                            // Populate raw Friend Manager panel list elements
+                            const fRow = document.createElement('div');
+                            fRow.className = 'friend-row-item';
+                            fRow.innerHTML = `
+                                <div class="friend-identity-capsule"><span>${fData.avatar}</span><strong>${fData.username}</strong></div>
+                                <button class="remove-friend-btn" onclick="removeFriendItem('${fSnap.id}')">Remove</button>
+                            `;
+                            friendsListContainer.appendChild(fRow);
+                        }
+                    }
+                }
+
+                // Execute JavaScript client-side sorting engine calculations to save pipeline reads
+                networkProfiles.sort((a, b) => b.totalFocusMinutes - a.totalFocusMinutes);
+
+                // Populate sorted leaderboard rows on interface layout architecture
+                networkProfiles.forEach((profile, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'leaderboard-row-item';
+                    if(profile.uid === auth.currentUser.uid) {
+                        row.style.border = '1px solid var(--theme-accent)';
+                        row.style.background = 'rgba(255,255,255,0.02)';
+                    }
+                    row.innerHTML = `
+                        <div class="rank-identity-capsule">
+                            <span class="rank-position-index">#${index + 1}</span>
+                            <span>${profile.avatar}</span>
+                            <span>${profile.username} ${profile.uid === auth.currentUser.uid ? '(You)' : ''}</span>
+                        </div>
+                        <span style="font-weight:700;">${profile.totalFocusMinutes}m</span>
+                    `;
+                    leaderboardList.appendChild(row);
+                });
+
+            } catch(e) { console.error("Social rendering cycle halted:", e); }
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -540,20 +770,31 @@
             const userDashboardView = document.getElementById('userDashboardView');
             const userEmailDisplay = document.getElementById('userEmailDisplay');
             const discreteAuthLink = document.getElementById('discreteAuthLink');
+            const socialNetworkHub = document.getElementById('socialNetworkHub');
 
             if (user) {
-                // Completely swap structures: Hide password fields and show bare profile view
                 guestAuthForm.style.display = 'none';
                 userDashboardView.style.display = 'flex';
+                socialNetworkHub.style.display = 'block';
                 userEmailDisplay.innerText = user.email;
                 discreteAuthLink.innerText = "Manage Account Profile";
                 
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists()) {
-                    window.setStatsObject(docSnap.data());
+                    const cloudData = docSnap.exists() ? docSnap.data() : {};
+                    document.getElementById('usernameDisplayLabel').innerText = cloudData.username || generateFallbackUsername(user.email);
+                    document.getElementById('avatarDisplayBubble').innerText = cloudData.avatar || "🥷";
+                    
+                    // Merge metrics logic safety engine configuration parameters
+                    window.setStatsObject({
+                        totalFocusMinutes: cloudData.totalFocusMinutes || window.getStatsObject().totalFocusMinutes,
+                        completedRounds: cloudData.completedRounds || window.getStatsObject().completedRounds
+                    });
                 }
+                window.refreshSocialHubData();
             } else {
                 userDashboardView.style.display = 'none';
+                socialNetworkHub.style.display = 'none';
                 guestAuthForm.style.display = 'block';
                 discreteAuthLink.innerText = "Sign In (Optional)";
                 document.getElementById('passwordDrawer').style.display = 'none';
@@ -576,11 +817,10 @@
 
         <div class="primary-controls">
             <button id="startBtn" class="btn btn-main">Start</button>
-            <button id="skipBtn" class="btn btn-sub" title="Skip Session">⏭</button>
-            <button id="resetBtn" class="btn btn-sub" title="Reset Session">🔄</button>
+            <button id="skipBtn" class="btn btn-sub">⏭</button>
+            <button id="resetBtn" class="btn btn-sub">🔄</button>
         </div>
 
-        <!-- Audio Config Panel -->
         <div class="settings-panel">
             <div class="panel-header">Audio System</div>
             <div class="config-row">
@@ -600,7 +840,6 @@
             </div>
         </div>
 
-        <!-- Metric Analytics Dashboard -->
         <div class="settings-panel" style="margin-top: 1.5rem;">
             <div class="panel-header">
                 Performance Dashboard
@@ -618,13 +857,10 @@
             </div>
         </div>
 
-        <!-- Discrete Account Segment Toggle -->
         <button id="discreteAuthLink" class="discrete-auth-toggle">Sign In (Optional)</button>
 
-        <!-- Dynamic Shift Account Board -->
         <div id="authPanel" class="auth-panel">
             
-            <!-- Structure 1: Unauthenticated Interactive Tab Deck -->
             <div id="guestAuthForm">
                 <div class="auth-nav-tabs">
                     <button id="tabLogin" class="auth-tab active">Log In</button>
@@ -638,23 +874,63 @@
                 <button id="authSubmitAction" class="auth-submit-btn">Log In</button>
             </div>
 
-            <!-- Structure 2: Authenticated Dashboard (Hides Credentials cleanly) -->
             <div id="userDashboardView" class="user-dashboard-view">
                 <div class="panel-header" style="margin:0;">Active User Profile</div>
-                <div id="userEmailDisplay" class="user-badge-header">---</div>
+                
+                <div class="profile-customizer-box">
+                    <div id="avatarDisplayBubble" class="avatar-display-bubble" title="Change Avatar Icon">🥷</div>
+                    <div class="profile-text-fields">
+                        <span id="usernameDisplayLabel" class="profile-username-tag">---</span>
+                        <span id="userEmailDisplay" class="profile-email-subtext">---</span>
+                    </div>
+                    <button id="editProfileBtn" class="btn-nested-action" style="max-width:60px; padding:0.4rem;">Edit</button>
+                </div>
                 
                 <div class="nested-action-row">
                     <button id="togglePasswordBtn" class="btn-nested-action">Change Password</button>
                     <button id="logoutBtn" class="btn-nested-action" style="color:#EF4444;">Log Out</button>
                 </div>
 
-                <!-- Hidden Change Password Sub-Drawer -->
+                <div id="profileEditDrawer" class="sub-drawer-panel">
+                    <input type="text" id="editUsernameInput" placeholder="New Unique Username" style="margin-bottom:0.5rem;">
+                    <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:0.5rem;">Select Custom Profile Avatar Icon:</label>
+                    <select id="editAvatarSelect" style="width:100%; margin-bottom:0.75rem;">
+                        <option value="🥷">🥷 Shadow Ninja</option>
+                        <option value="🔥">🔥 Hyper Drive</option>
+                        <option value="🧘">🧘 Deep Flow</option>
+                        <option value="⚡">⚡ Focus Charge</option>
+                        <option value="🧠">🧠 Neural Sync</option>
+                        <option value="🚀">🚀 Apex Bound</option>
+                    </select>
+                    <button id="saveProfileBtn" class="auth-submit-btn">Save Identity Changes</button>
+                </div>
+
                 <div id="passwordDrawer" class="sub-drawer-panel">
                     <input type="password" id="newPasswordInput" placeholder="Enter New Secure Password">
                     <button id="submitNewPasswordBtn" class="auth-submit-btn" style="background:#2D2D35; color:#ffffff;">Update Password</button>
                 </div>
             </div>
+        </div>
 
+        <div id="socialNetworkHub" class="social-network-hub" style="display:none;">
+            <div class="panel-header">Synchronized Sync Leaderboard</div>
+            <div id="leaderboardList" class="leaderboard-list">
+                </div>
+
+            <div class="panel-header" style="margin-top:1.5rem;">Connect with Flow Runners</div>
+            <div class="search-engine-input-wrapper">
+                <input type="text" id="friendSearchInput" placeholder="Search exact global username...">
+                <button id="friendSearchBtn" class="search-engine-btn">Search</button>
+            </div>
+
+            <div id="searchFeedbackCard" class="search-feedback-card">
+                <span id="searchResultName" style="font-size:0.85rem; font-weight:700;">---</span>
+                <button id="addFriendActionBtn" class="search-engine-btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Add Friend</button>
+            </div>
+
+            <div class="panel-header" style="margin-top:1.25rem; font-size:0.7rem;">Your Friends Matrix</div>
+            <div id="friendsListContainer" class="friends-list-container">
+                </div>
         </div>
 
     </div>
@@ -684,7 +960,7 @@
     let oscR = null;
     let gainNode = null;
 
-    // --- DOM Elements ---
+    // --- Core UI Node DOM Mappings ---
     const startBtn = document.getElementById('startBtn');
     const skipBtn = document.getElementById('skipBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -696,7 +972,7 @@
     const authPanel = document.getElementById('authPanel');
     const pwaInstallBtn = document.getElementById('pwaInstallBtn');
 
-    // UI Interactive Element Hooks
+    // Authentication UI Layout Hooks
     const tabLogin = document.getElementById('tabLogin');
     const tabSignup = document.getElementById('tabSignup');
     const authSubmitAction = document.getElementById('authSubmitAction');
@@ -705,7 +981,14 @@
     const submitNewPasswordBtn = document.getElementById('submitNewPasswordBtn');
     const logoutBtn = document.getElementById('logoutBtn');
 
-    let activeAuthMode = 'login'; // Track whether user is toggled to login or signup
+    // Social Dashboard Architecture Layout Mappings
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const profileEditDrawer = document.getElementById('profileEditDrawer');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const friendSearchBtn = document.getElementById('friendSearchBtn');
+    const addFriendActionBtn = document.getElementById('addFriendActionBtn');
+
+    let activeAuthMode = 'login'; 
 
     function loadAudioSettings() {
         const savedToggle = localStorage.getItem('fp_audio_enabled');
@@ -830,7 +1113,7 @@
         toggleTimer();
     }
 
-    // --- Audio System Subroutines ---
+    // --- Audio Synthesis Pipeline Drivers ---
     function initAudioNodes() {
         if (!audioToggle.checked) return;
         if (!audioCtx || (oscL && oscR)) return;
@@ -904,7 +1187,7 @@
         }
     }
 
-    // --- Hard-Wired Operational Event Listeners ---
+    // --- Hard-Wired Operational System Event Listeners ---
     startBtn.addEventListener('click', toggleTimer);
     
     skipBtn.addEventListener('click', () => {
@@ -951,17 +1234,12 @@
     });
 
     discreteAuthLink.addEventListener('click', () => {
-        if (authPanel.style.display === 'block') {
-            authPanel.style.display = 'none';
-        } else {
-            authPanel.style.display = 'block';
-            setTimeout(() => {
-                authPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 50);
+        authPanel.style.display = (authPanel.style.display === 'block') ? 'none' : 'block';
+        if(authPanel.style.display === 'block') {
+            setTimeout(() => { authPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
         }
     });
 
-    // --- Interactive Fluid Tab-Deck Controls ---
     tabLogin.addEventListener('click', () => {
         activeAuthMode = 'login';
         tabLogin.classList.add('active');
@@ -980,21 +1258,12 @@
         const email = document.getElementById('authEmail').value;
         const pass = document.getElementById('authPassword').value;
         if(!email || !pass) { alert("Please complete form fields."); return; }
-        
-        if(activeAuthMode === 'login' && window.firebaseLogIn) {
-            window.firebaseLogIn(email, pass);
-        } else if(activeAuthMode === 'signup' && window.firebaseSignUp) {
-            window.firebaseSignUp(email, pass);
-        }
+        if(activeAuthMode === 'login') window.firebaseLogIn(email, pass);
+        else window.firebaseSignUp(email, pass);
     });
 
-    // Sub-Dashboard Controls for Authenticated Profiles
     togglePasswordBtn.addEventListener('click', () => {
-        if (passwordDrawer.style.display === 'block') {
-            passwordDrawer.style.display = 'none';
-        } else {
-            passwordDrawer.style.display = 'block';
-        }
+        passwordDrawer.style.display = (passwordDrawer.style.display === 'block') ? 'none' : 'block';
     });
 
     submitNewPasswordBtn.addEventListener('click', () => {
@@ -1003,20 +1272,46 @@
         if(window.firebaseUpdatePassword) window.firebaseUpdatePassword(newPass);
     });
 
-    logoutBtn.addEventListener('click', () => {
-        if(window.firebaseLogOut) window.firebaseLogOut();
+    logoutBtn.addEventListener('click', () => { if(window.firebaseLogOut) window.firebaseLogOut(); });
+
+    // --- Interactive Social System Event Mappings ---
+    editProfileBtn.addEventListener('click', () => {
+        if(profileEditDrawer.style.display === 'block') {
+            profileEditDrawer.style.display = 'none';
+        } else {
+            document.getElementById('editUsernameInput').value = document.getElementById('usernameDisplayLabel').innerText;
+            document.getElementById('editAvatarSelect').value = document.getElementById('avatarDisplayBubble').innerText;
+            profileEditDrawer.style.display = 'block';
+        }
     });
 
-    // --- App Lifecycle Bootstrapping ---
+    saveProfileBtn.addEventListener('click', () => {
+        const newUser = document.getElementById('editUsernameInput').value.trim();
+        const newAv = document.getElementById('editAvatarSelect').value;
+        if(!newUser || newUser.length < 3) { alert("Username is too short."); return; }
+        if(window.updateIdentityConfiguration) window.updateIdentityConfiguration(newUser, newAv);
+        profileEditDrawer.style.display = 'none';
+    });
+
+    friendSearchBtn.addEventListener('click', () => {
+        const searchVal = document.getElementById('friendSearchInput').value;
+        if(window.executeUsernameSearch) window.executeUsernameSearch(searchVal);
+    });
+
+    addFriendActionBtn.addEventListener('click', () => {
+        if(window.addDiscoveredFriend) window.addDiscoveredFriend();
+    });
+
+    // --- App Lifecycle Initialization Bootstrappers ---
     loadAudioSettings();
     loadStats();
     updateDisplay();
 
-    // --- Progressive Web App Management ---
+    // --- Progressive Web App Management Engine ---
     let deferredPrompt = null;
     if ('serviceWorker' in navigator) {
         const swCode = `
-            const CACHE_NAME = 'binaural-flow-v50';
+            const CACHE_NAME = 'binaural-flow-v55';
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
         `;
@@ -1025,16 +1320,14 @@
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        pwaInstallBtn.style.display = 'block';
+        e.preventDefault(); deferredPrompt = e; pwaInstallBtn.style.display = 'block';
     });
 
     pwaInstallBtn.addEventListener('click', () => {
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') pwaInstallBtn.style.display = 'none';
+        deferredPrompt.userChoice.then((choice) => {
+            if (choice.outcome === 'accepted') pwaInstallBtn.style.display = 'none';
             deferredPrompt = null;
         });
     });
