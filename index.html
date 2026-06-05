@@ -377,16 +377,212 @@
             word-break: break-all;
         }
     </style>
+</head>
+<body>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<div class="app-shell" id="appShell">
+    <div class="relative-content">
+        
+        <div class="top-action-bar">
+            <button id="pwaInstallBtn">📥 Install App</button>
+        </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCRY64EvtgTPPCaNA2q9BiQyV0_3HZuD6E",
-            authDomain: "flowspace-bf064.firebaseapp.com",
-            projectId: "flowspace-bf064",
-            storageBucket: "flowspace-bf064.firebasestorage.app",
-            messagingSenderId: "475448486655",
-            appId: "1:475448486655:web:a0b1ce5636
+        <div id="status" class="status-badge">Focus Phase</div>
+        <div id="timer" class="timer-display">25:00</div>
+        <div id="round" class="cycle-tracker">Round 1 of 4</div>
+
+        <div class="primary-controls">
+            <button id="startBtn" class="btn btn-main">Start</button>
+            <button id="skipBtn" class="btn btn-sub" title="Skip Session">⏭</button>
+            <button id="resetBtn" class="btn btn-sub" title="Reset Session">🔄</button>
+        </div>
+
+        <div class="settings-panel">
+            <div class="panel-header">Audio System</div>
+            <div class="config-row">
+                <label for="audioToggle">Binaural Waves</label>
+                <input type="checkbox" id="audioToggle" checked>
+            </div>
+            <div class="config-row">
+                <label for="wavePreset">Wave State</label>
+                <select id="wavePreset">
+                    <option value="beta">Beta (15 Hz) — Drive</option>
+                    <option value="alpha">Alpha (10 Hz) — Flow</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <label for="volume">Ambient Vol</label>
+                <input type="range" id="volume" min="0" max="0.08" step="0.01" value="0.03">
+            </div>
+        </div>
+
+        <div class="settings-panel" style="margin-top: 1.5rem;">
+            <div class="panel-header">
+                Performance Dashboard
+                <button id="clearMetricsLink" class="reset-link">Clear Metrics</button>
+            </div>
+            <div class="dashboard-grid">
+                <div class="metric-tile">
+                    <div id="statMinutes" class="metric-value">0</div>
+                    <div class="metric-label">Focus Mins</div>
+                </div>
+                <div class="metric-tile">
+                    <div id="statRounds" class="metric-value">0</div>
+                    <div class="metric-label">Rounds Clear</div>
+                </div>
+            </div>
+        </div>
+
+        <button id="discreteAuthLink" class="discrete-auth-toggle">Sign In (Optional)</button>
+
+        <div id="authPanel" class="auth-panel">
+            <div class="panel-header" style="margin-bottom:0.5rem;">Sign In Profile</div>
+            <div id="authNoticeText" class="auth-notice">
+                Login option only serves the purpose of saving your stats. If you don't want to sync it you don't need to login.
+            </div>
+            <div id="userBadge" class="user-badge"></div>
+            <input type="email" id="authEmail" placeholder="Email Address">
+            <input type="password" id="authPassword" placeholder="Password">
+            <div id="authActionGroup" class="auth-btn-group">
+                </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // --- Firebase Setup ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCRY64EvtgTPPCaNA2q9BiQyV0_3HZuD6E",
+        authDomain: "flowspace-bf064.firebaseapp.com",
+        projectId: "flowspace-bf064",
+        storageBucket: "flowspace-bf064.firebasestorage.app",
+        messagingSenderId: "475448486655",
+        appId: "1:475448486655:web:a0b1ce563695397e283aca",
+        measurementId: "G-X3K6ZVSVBF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- Core State Variables ---
+    let stats = { totalFocusMinutes: 0, completedRounds: 0 };
+    const FOCUS_TIME = 25;
+    const SHORT_BREAK = 5;
+    const LONG_BREAK = 15;
+
+    let timeLeft = FOCUS_TIME * 60;
+    let timerId = null;
+    let currentMode = 'focus'; 
+    let roundCount = 1;
+
+    let audioCtx = null;
+    let oscL = null;
+    let oscR = null;
+    let gainNode = null;
+
+    // --- DOM Elements ---
+    const startBtn = document.getElementById('startBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const audioToggle = document.getElementById('audioToggle');
+    const wavePreset = document.getElementById('wavePreset');
+    const volumeSlider = document.getElementById('volume');
+    const clearMetricsLink = document.getElementById('clearMetricsLink');
+    const discreteAuthLink = document.getElementById('discreteAuthLink');
+    const authPanel = document.getElementById('authPanel');
+    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+    // --- Core Core Operational Functions ---
+    function loadAudioSettings() {
+        const savedToggle = localStorage.getItem('fp_audio_enabled');
+        if (savedToggle !== null) audioToggle.checked = (savedToggle === 'true');
+        const savedPreset = localStorage.getItem('fp_wave_preset');
+        if (savedPreset !== null) wavePreset.value = savedPreset;
+        const savedVol = localStorage.getItem('fp_volume');
+        if (savedVol !== null) volumeSlider.value = savedVol;
+    }
+
+    function saveAudioSettings() {
+        localStorage.setItem('fp_audio_enabled', audioToggle.checked);
+        localStorage.setItem('fp_wave_preset', wavePreset.value);
+        localStorage.setItem('fp_volume', volumeSlider.value);
+    }
+
+    function loadStats() {
+        const savedStats = localStorage.getItem('fp_stats');
+        if (savedStats) {
+            stats = JSON.parse(savedStats);
+            updateStatUI();
+        }
+    }
+
+    function updateStatUI() {
+        document.getElementById('statMinutes').innerText = stats.totalFocusMinutes;
+        document.getElementById('statRounds').innerText = stats.completedRounds;
+    }
+
+    async function syncStatsToCloud() {
+        if (auth.currentUser) {
+            try {
+                await setDoc(doc(db, "users", auth.currentUser.uid), stats);
+            } catch(e) { console.error("Cloud push failed:", e); }
+        }
+    }
+
+    function logFocusMinute() {
+        stats.totalFocusMinutes += 1;
+        updateStatUI();
+        localStorage.setItem('fp_stats', JSON.stringify(stats));
+        syncStatsToCloud();
+    }
+
+    function logCompletedRound() {
+        stats.completedRounds += 1;
+        updateStatUI();
+        localStorage.setItem('fp_stats', JSON.stringify(stats));
+        syncStatsToCloud();
+    }
+
+    function updateDisplay() {
+        const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const secs = (timeLeft % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = `${mins}:${secs}`;
+        
+        const statusEl = document.getElementById('status');
+        const root = document.documentElement;
+        
+        if (currentMode === 'focus') {
+            statusEl.innerText = "Focus Phase";
+            root.style.setProperty('--theme-glow', 'var(--focus-glow)');
+            root.style.setProperty('--theme-accent', 'var(--focus-accent)');
+        } else if (currentMode === 'shortBreak') {
+            statusEl.innerText = "Short Break";
+            root.style.setProperty('--theme-glow', 'var(--break-glow)');
+            root.style.setProperty('--theme-accent', 'var(--break-accent)');
+        } else {
+            statusEl.innerText = "Long Break";
+            root.style.setProperty('--theme-glow', 'var(--long-glow)');
+            root.style.setProperty('--theme-accent', 'var(--long-accent)');
+        }
+        document.getElementById('round').innerText = `Round ${roundCount} of 4`;
+    }
+
+    function toggleTimer() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        } catch(e) { console.warn(e); }
+
+        if (timerId) {
+            clearInterval(timerId);
+            timerId = null;
+            startBtn.innerText = 'Start';
+            stopAudio();
+        } else {
+            startBtn.innerText
