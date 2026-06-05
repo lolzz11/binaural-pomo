@@ -572,4 +572,311 @@
     const audioToggle = document.getElementById('audioToggle');
     const wavePreset = document.getElementById('wavePreset');
     const volumeSlider = document.getElementById('volume');
-    const clearMetricsLink = document.getElementById('clearMetri
+    const clearMetricsLink = document.getElementById('clearMetricsLink');
+    const discreteAuthLink = document.getElementById('discreteAuthLink');
+    const authPanel = document.getElementById('authPanel');
+    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+    function loadAudioSettings() {
+        const savedToggle = localStorage.getItem('fp_audio_enabled');
+        if (savedToggle !== null) audioToggle.checked = (savedToggle === 'true');
+        const savedPreset = localStorage.getItem('fp_wave_preset');
+        if (savedPreset !== null) wavePreset.value = savedPreset;
+        const savedVol = localStorage.getItem('fp_volume');
+        if (savedVol !== null) volumeSlider.value = savedVol;
+    }
+
+    function saveAudioSettings() {
+        localStorage.setItem('fp_audio_enabled', audioToggle.checked);
+        localStorage.setItem('fp_wave_preset', wavePreset.value);
+        localStorage.setItem('fp_volume', volumeSlider.value);
+    }
+
+    function loadStats() {
+        const savedStats = localStorage.getItem('fp_stats');
+        if (savedStats) {
+            stats = JSON.parse(savedStats);
+            updateStatUI();
+        }
+    }
+
+    function updateStatUI() {
+        document.getElementById('statMinutes').innerText = stats.totalFocusMinutes;
+        document.getElementById('statRounds').innerText = stats.completedRounds;
+    }
+
+    function logFocusMinute() {
+        stats.totalFocusMinutes += 1;
+        updateStatUI();
+        localStorage.setItem('fp_stats', JSON.stringify(stats));
+        if(window.syncStatsToCloud) window.syncStatsToCloud();
+    }
+
+    function logCompletedRound() {
+        stats.completedRounds += 1;
+        updateStatUI();
+        localStorage.setItem('fp_stats', JSON.stringify(stats));
+        if(window.syncStatsToCloud) window.syncStatsToCloud();
+    }
+
+    function updateDisplay() {
+        const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const secs = (timeLeft % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = `${mins}:${secs}`;
+        
+        const statusEl = document.getElementById('status');
+        const root = document.documentElement;
+        
+        if (currentMode === 'focus') {
+            statusEl.innerText = "Focus Phase";
+            root.style.setProperty('--theme-glow', 'var(--focus-glow)');
+            root.style.setProperty('--theme-accent', 'var(--focus-accent)');
+        } else if (currentMode === 'shortBreak') {
+            statusEl.innerText = "Short Break";
+            root.style.setProperty('--theme-glow', 'var(--break-glow)');
+            root.style.setProperty('--theme-accent', 'var(--break-accent)');
+        } else {
+            statusEl.innerText = "Long Break";
+            root.style.setProperty('--theme-glow', 'var(--long-glow)');
+            root.style.setProperty('--theme-accent', 'var(--long-accent)');
+        }
+        document.getElementById('round').innerText = `Round ${roundCount} of 4`;
+    }
+
+    function toggleTimer() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        } catch(e) { console.warn(e); }
+
+        if (timerId) {
+            clearInterval(timerId);
+            timerId = null;
+            startBtn.innerText = 'Start';
+            stopAudio();
+        } else {
+            startBtn.innerText = 'Pause';
+            if (currentMode === 'focus') startAudio();
+            
+            timerId = setInterval(() => {
+                timeLeft--;
+                if (currentMode === 'focus' && (timeLeft > 0) && (timeLeft % 60 === 0)) {
+                    logFocusMinute();
+                }
+                if (timeLeft < 0) {
+                    handlePhaseTransition(true);
+                }
+                updateDisplay();
+            }, 1000);
+        }
+    }
+
+    function handlePhaseTransition(playAlert = false) {
+        clearInterval(timerId);
+        timerId = null;
+        startBtn.innerText = 'Start';
+        stopAudio();
+
+        if (playAlert) {
+            if (currentMode === 'focus') playChimeNotification('focusEnds');
+            else playChimeNotification('breakEnds');
+        }
+
+        if (currentMode === 'focus') {
+            logCompletedRound();
+            if (roundCount < 4) {
+                currentMode = 'shortBreak';
+                timeLeft = SHORT_BREAK * 60;
+            } else {
+                currentMode = 'longBreak';
+                timeLeft = LONG_BREAK * 60;
+            }
+        } else {
+            if (currentMode === 'longBreak') roundCount = 1;
+            else roundCount++;
+            currentMode = 'focus';
+            timeLeft = FOCUS_TIME * 60;
+        }
+        toggleTimer();
+    }
+
+    // --- Audio Nodes Logic Pool ---
+    function initAudioNodes() {
+        if (!audioToggle.checked) return;
+        if (!audioCtx || (oscL && oscR)) return;
+
+        oscL = audioCtx.createOscillator();
+        oscR = audioCtx.createOscillator();
+        let pannerL = audioCtx.createStereoPanner();
+        let pannerR = audioCtx.createStereoPanner();
+        gainNode = audioCtx.createGain();
+
+        pannerL.pan.value = -1; 
+        pannerR.pan.value = 1;  
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+
+        oscL.connect(pannerL).connect(gainNode);
+        oscR.connect(pannerR).connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        updateFrequencies();
+
+        oscL.start();
+        oscR.start();
+    }
+
+    function updateFrequencies() {
+        if (!oscL || !oscR) return;
+        const preset = wavePreset.value;
+        oscL.frequency.setValueAtTime(180, audioCtx.currentTime); 
+        oscR.frequency.setValueAtTime((preset === 'beta') ? 195 : 190, audioCtx.currentTime);
+    }
+
+    function startAudio() {
+        if (!audioToggle.checked) return;
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        initAudioNodes();
+        
+        const targetVol = parseFloat(volumeSlider.value);
+        if (gainNode && audioCtx) {
+            gainNode.gain.linearRampToValueAtTime(targetVol, audioCtx.currentTime + 0.05);
+        }
+    }
+
+    function stopAudio() {
+        if (audioCtx && gainNode) {
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+        }
+    }
+
+    function playChimeNotification(type) {
+        if (!audioCtx) return;
+        const chimeOsc = audioCtx.createOscillator();
+        const chimeGain = audioCtx.createGain();
+        chimeOsc.connect(chimeGain).connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'focusEnds') {
+            chimeOsc.type = 'sine';
+            chimeOsc.frequency.setValueAtTime(659.25, now); 
+            chimeOsc.frequency.setValueAtTime(880.00, now + 0.12); 
+            chimeGain.gain.setValueAtTime(0, now);
+            chimeGain.gain.linearRampToValueAtTime(0.2, now + 0.03);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+            chimeOsc.start(now); chimeOsc.stop(now + 0.6);
+        } else {
+            chimeOsc.type = 'triangle'; 
+            chimeOsc.frequency.setValueAtTime(523.25, now); 
+            chimeGain.gain.setValueAtTime(0, now);
+            chimeGain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+            chimeOsc.start(now); chimeOsc.stop(now + 0.5);
+        }
+    }
+
+    // --- Hard-Wired Operational Event Listeners ---
+    startBtn.addEventListener('click', toggleTimer);
+    
+    skipBtn.addEventListener('click', () => {
+        handlePhaseTransition(false); 
+        updateDisplay();
+    });
+    
+    resetBtn.addEventListener('click', () => {
+        clearInterval(timerId);
+        timerId = null;
+        stopAudio();
+        currentMode = 'focus';
+        roundCount = 1;
+        timeLeft = FOCUS_TIME * 60;
+        startBtn.innerText = 'Start';
+        updateDisplay();
+    });
+
+    audioToggle.addEventListener('change', () => {
+        saveAudioSettings();
+        if (audioToggle.checked && timerId && currentMode === 'focus') startAudio();
+        else stopAudio();
+    });
+
+    wavePreset.addEventListener('change', () => {
+        saveAudioSettings();
+        updateFrequencies();
+    });
+
+    volumeSlider.addEventListener('input', () => {
+        if (gainNode && audioCtx) {
+            gainNode.gain.setValueAtTime(parseFloat(volumeSlider.value), audioCtx.currentTime);
+        }
+    });
+    volumeSlider.addEventListener('change', saveAudioSettings);
+
+    clearMetricsLink.addEventListener('click', () => {
+        if(confirm("Wipe clear your performance metrics dashboard logs?")) {
+            stats = { totalFocusMinutes: 0, completedRounds: 0 };
+            localStorage.setItem('fp_stats', JSON.stringify(stats));
+            updateStatUI();
+            if(window.syncStatsToCloud) window.syncStatsToCloud();
+        }
+    });
+
+    discreteAuthLink.addEventListener('click', () => {
+        if (authPanel.style.display === 'block') {
+            authPanel.style.display = 'none';
+        } else {
+            authPanel.style.display = 'block';
+            setTimeout(() => {
+                authPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 50);
+        }
+    });
+
+    window.handleAuthAction = function(type) {
+        const email = document.getElementById('authEmail').value;
+        const pass = document.getElementById('authPassword').value;
+        if(!email || !pass) { alert("Please complete form fields."); return; }
+        
+        if(type === 'login' && window.firebaseLogIn) window.firebaseLogIn(email, pass);
+        if(type === 'signup' && window.firebaseSignUp) window.firebaseSignUp(email, pass);
+    };
+
+    // --- App Lifecycle Bootstrapping ---
+    loadAudioSettings();
+    loadStats();
+    updateDisplay();
+
+    // --- Strict Immediate PWA Cache Reset Engine ---
+    let deferredPrompt = null;
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.unregister(); // Forces broken service workers to die instantly
+            }
+        });
+        
+        const swCode = `
+            const CACHE_NAME = 'binaural-flow-v45';
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
+        `;
+        const swBlob = new Blob([swCode], {type: 'application/javascript'});
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.log(err));
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        pwaInstallBtn.style.display = 'block';
+    });
+
+    pwaInstallBtn.addEventListener('click', () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') pwaInstallBtn.style.display = 'none';
+            deferredPrompt = null;
+        });
+    });
+</script>
+</body>
+</html>
