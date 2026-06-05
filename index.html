@@ -43,7 +43,6 @@
             --text-main: #F4F4F6;
             --text-muted: #7E7E86;
             
-            /* State Colors */
             --focus-glow: rgba(239, 68, 68, 0.08);
             --focus-accent: #EF4444;
             --break-glow: rgba(16, 185, 129, 0.08);
@@ -51,7 +50,6 @@
             --long-glow: rgba(59, 130, 246, 0.08);
             --long-accent: #3B82F6;
             
-            /* Active Dynamic Variables */
             --theme-glow: var(--focus-glow);
             --theme-accent: var(--focus-accent);
         }
@@ -83,7 +81,6 @@
             transition: border-color 0.4s ease;
         }
 
-        /* Dynamic Background Aura Effect */
         .app-shell::before {
             content: '';
             position: absolute;
@@ -361,11 +358,11 @@
 </div>
 
 <script>
-    // --- PWA Ecosystem Core Setup ---
+    // --- PWA Ecosystem Setup ---
     let deferredPrompt = null;
     if ('serviceWorker' in navigator) {
         const swCode = `
-            const CACHE_NAME = 'binaural-flow-v3';
+            const CACHE_NAME = 'binaural-flow-v5';
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
         `;
@@ -388,7 +385,7 @@
         });
     }
 
-    // --- Pomodoro Configuration Timers (Minutes) ---
+    // --- Pomodoro Configuration Engine ---
     const FOCUS_TIME = 25;
     const SHORT_BREAK = 5;
     const LONG_BREAK = 15;
@@ -398,7 +395,7 @@
     let currentMode = 'focus'; 
     let roundCount = 1;
 
-    // Audio API Node Infrastructure
+    // Audio API Infrastructure Nodes
     let audioCtx = null;
     let oscL = null;
     let oscR = null;
@@ -482,14 +479,12 @@
     }
 
     function toggleTimer() {
-        if (!audioCtx && document.getElementById('audioToggle').checked) {
+        if (!audioCtx) {
             try {
                 initAudio();
             } catch (e) {
-                console.log("Audio pipeline warmup error: ", e);
+                console.log("Audio warmup issue: ", e);
             }
-        } else if (audioCtx && audioCtx.state === 'suspended' && currentMode === 'focus' && document.getElementById('audioToggle').checked) {
-            audioCtx.resume();
         }
 
         if (timerId) {
@@ -507,18 +502,27 @@
                     logFocusMinute();
                 }
                 if (timeLeft < 0) {
-                    handlePhaseTransition();
+                    handlePhaseTransition(true); // pass true to play chime on automatic transition
                 }
                 updateDisplay();
             }, 1000);
         }
     }
 
-    function handlePhaseTransition() {
+    function handlePhaseTransition(playAlert = false) {
         clearInterval(timerId);
         timerId = null;
         document.getElementById('startBtn').innerText = 'Start';
         stopAudio();
+
+        // Trigger dynamic synthesized audio notifications
+        if (playAlert) {
+            if (currentMode === 'focus') {
+                playChimeNotification('focusEnds');
+            } else {
+                playChimeNotification('breakEnds');
+            }
+        }
 
         if (currentMode === 'focus') {
             logCompletedRound();
@@ -542,7 +546,7 @@
     }
 
     function skipSession() {
-        handlePhaseTransition();
+        handlePhaseTransition(false); // Skip intentionally, no notification chime needed
         updateDisplay();
     }
 
@@ -557,9 +561,12 @@
         updateDisplay();
     }
 
-    // --- Audio Synthesis Engine ---
+    // --- Glitch-Resistant Audio Synthesis Engine ---
     function initAudio() {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+            latencyHint: 'playback'
+        });
+        
         oscL = audioCtx.createOscillator();
         oscR = audioCtx.createOscillator();
         let pannerL = audioCtx.createStereoPanner();
@@ -568,50 +575,10 @@
 
         pannerL.pan.value = -1; 
         pannerR.pan.value = 1;  
-        gainNode.gain.value = document.getElementById('volume').value;
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
 
         oscL.connect(pannerL).connect(gainNode);
         oscR.connect(pannerR).connect(gainNode);
         gainNode.connect(audioCtx.destination);
         updateFrequencies();
-
-        oscL.start();
-        oscR.start();
-    }
-
-    function updateFrequencies() {
-        if (!oscL || !oscR) return;
-        const preset = document.getElementById('wavePreset').value;
-        oscL.frequency.value = 180; 
-        oscR.frequency.value = (preset === 'beta') ? 195 : 190;
-    }
-
-    function startAudio() {
-        if (!document.getElementById('audioToggle').checked) return;
-        if (!audioCtx) {
-            initAudio();
-        } else if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    }
-
-    function stopAudio() {
-        if (audioCtx && audioCtx.state === 'running') {
-            audioCtx.suspend();
-        }
-    }
-
-    function handleAudioToggle() {
-        if (document.getElementById('audioToggle').checked && timerId && currentMode === 'focus') {
-            startAudio();
-        } else {
-            stopAudio();
-        }
-    }
-
-    function updateVolume() {
-        if (gainNode) gainNode.gain.value = document.getElementById('volume').value;
-    }
-</script>
-</body>
-</html>
