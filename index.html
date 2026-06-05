@@ -365,20 +365,11 @@
             background: #121216;
             border: 1px solid #23232b;
             border-radius: 12px;
-            padding: 0.85rem;
-            font-size: 0.78rem;
+            padding: 0.95rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
-            line-height: 1.45;
+            line-height: 1.5;
             margin-bottom: 1.25rem;
-        }
-
-        .auth-notice ul {
-            margin: 0.4rem 0 0 0;
-            padding-left: 1.1rem;
-        }
-
-        .auth-notice li {
-            margin-bottom: 0.25rem;
         }
 
         .auth-panel input {
@@ -937,8 +928,8 @@
             <div class="config-row">
                 <label for="wavePreset">Wave State</label>
                 <select id="wavePreset">
-                    <option value="beta">Beta (15 Hz) — Drive</option>
-                    <option value="alpha">Alpha (10 Hz) — Flow</option>
+                    <option value="beta">Beta (15 Hz) — Focus</option>
+                    <option value="alpha">Alpha (10 Hz) — Relax</option>
                 </select>
             </div>
             <div class="config-row">
@@ -974,14 +965,9 @@
                     <button id="tabSignup" class="auth-tab">Create Account</button>
                 </div>
                 
-                <!-- Rewritten Friendly Info Box -->
+                <!-- Condensed exact notice message -->
                 <div class="auth-notice">
-                    <strong>Want to save your progress?</strong> Making a profile is completely optional, but grabbing one unlocks some fun perks:
-                    <ul>
-                        <li><strong>Keep Your Stats:</strong> Save total focus minutes and cleared rounds so they never vanish when clearing your browser.</li>
-                        <li><strong>Add Friends & Rank Up:</strong> See how your focus times stack up against friends on live leaderboards.</li>
-                        <li><strong>Pick an Avatar:</strong> Swap out that default profile bubble for cool, stylized graphic icons to show off on the boards.</li>
-                    </ul>
+                    You can save your stats across devices with signing in, second you can add friends and show friendlist ranking.
                 </div>
                 
                 <input type="email" id="authEmail" placeholder="Email Address">
