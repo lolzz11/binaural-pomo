@@ -84,7 +84,7 @@
             position: relative;
             overflow: hidden;
             transition: border-color 0.4s ease;
-            text-align: center; /* Forces container contents to remain perfectly centered */
+            text-align: center;
         }
 
         .app-shell::before {
@@ -107,7 +107,7 @@
             z-index: 1;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Enforces strict alignment of elements */
+            align-items: center;
         }
 
         .top-action-bar {
@@ -333,23 +333,54 @@
         }
         .discrete-auth-toggle:hover { opacity: 1; }
 
+        /* --- Overhauled Interactive Account Panel System --- */
         .auth-panel {
             background: #1A1A1F;
             border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 1.25rem;
+            border-radius: 18px;
+            padding: 1.5rem;
             margin-top: 1rem;
             display: none;
             text-align: left;
             width: 100%;
             box-sizing: border-box;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .auth-nav-tabs {
+            display: flex;
+            background: #111115;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .auth-tab {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 7px;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .auth-tab.active {
+            background: #25252D;
+            color: var(--text-main);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         
         .auth-notice {
             font-size: 0.75rem;
             color: var(--text-muted);
             line-height: 1.4;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
             padding-bottom: 0.75rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -360,40 +391,93 @@
             background: #111115;
             border: 1px solid #2D2D35;
             color: var(--text-main);
-            padding: 0.6rem;
-            border-radius: 8px;
+            padding: 0.75rem;
+            border-radius: 10px;
             margin-bottom: 0.75rem;
             font-size: 0.85rem;
             outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        .auth-btn-group {
+
+        .auth-panel input:focus {
+            border-color: var(--theme-accent);
+            box-shadow: 0 0 0 3px var(--theme-glow);
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            background: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            padding: 0.85rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(255,255,255,0.05);
+            margin-top: 0.25rem;
+        }
+        .auth-submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(255,255,255,0.1);
+        }
+        
+        /* Authenticated UI Layout Elements */
+        .user-dashboard-view {
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .user-badge-header {
+            font-size: 0.85rem;
+            color: #C4C4C6;
+            font-weight: 600;
+            background: #111115;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.02);
+            word-break: break-all;
+        }
+
+        .nested-action-row {
             display: flex;
             gap: 8px;
+            width: 100%;
         }
-        .auth-btn {
+
+        .btn-nested-action {
             flex: 1;
-            padding: 0.5rem;
+            background: transparent;
+            border: 1px solid #2D2D35;
+            color: var(--text-muted);
+            padding: 0.6rem;
             font-size: 0.8rem;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            border: none;
+            transition: all 0.2s ease;
+            text-align: center;
         }
-        .auth-btn-primary { background: var(--text-main); color: var(--bg-color); }
-        .auth-btn-secondary { background: transparent; border: 1px solid #2D2D35; color: var(--text-muted); }
-        
-        .user-badge {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
+        .btn-nested-action:hover {
+            background: #212126;
+            color: var(--text-main);
+            border-color: #444450;
+        }
+
+        .sub-drawer-panel {
             display: none;
-            word-break: break-all;
+            border-top: 1px dashed #2D2D35;
+            padding-top: 1rem;
+            margin-top: 0.5rem;
         }
     </style>
 
+    <!-- Unified Firebase Injection Module Layer -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -413,6 +497,11 @@
         window.firebaseSignUp = async (email, password) => {
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
+                
+                // Trigger customized interactive email verification layer
+                await sendEmailVerification(cred.user);
+                alert("Account created successfully! A verification link has been shot to your inbox, just to make sure your email is YOURS ::laugh::");
+                
                 await setDoc(doc(db, "users", cred.user.uid), window.getStatsObject());
                 document.getElementById('authPanel').style.display = 'none';
             } catch (err) { alert(err.message); }
@@ -427,44 +516,47 @@
 
         window.firebaseLogOut = () => { signOut(auth); };
 
+        window.firebaseUpdatePassword = async (newPassword) => {
+            if(auth.currentUser) {
+                try {
+                    await updatePassword(auth.currentUser, newPassword);
+                    alert("Security lock transformed. Password changed successfully!");
+                    document.getElementById('passwordDrawer').style.display = 'none';
+                    document.getElementById('newPasswordInput').value = '';
+                } catch(err) { alert(err.message); }
+            }
+        };
+
         window.syncStatsToCloud = async () => {
             if (auth.currentUser) {
                 try {
                     await setDoc(doc(db, "users", auth.currentUser.uid), window.getStatsObject());
-                } catch(e) { console.error("Cloud push failed:", e); }
+                } catch(e) { console.error("Cloud sync paused:", e); }
             }
         };
 
         onAuthStateChanged(auth, async (user) => {
-            const badge = document.getElementById('userBadge');
-            const actionBtnContainer = document.getElementById('authActionGroup');
-            const noticeEl = document.getElementById('authNoticeText');
+            const guestAuthForm = document.getElementById('guestAuthForm');
+            const userDashboardView = document.getElementById('userDashboardView');
+            const userEmailDisplay = document.getElementById('userEmailDisplay');
             const discreteAuthLink = document.getElementById('discreteAuthLink');
 
             if (user) {
-                badge.innerText = `Connected: ${user.email}`;
-                badge.style.display = 'block';
-                if(noticeEl) noticeEl.style.display = 'none';
+                // Completely swap structures: Hide password fields and show bare profile view
+                guestAuthForm.style.display = 'none';
+                userDashboardView.style.display = 'flex';
+                userEmailDisplay.innerText = user.email;
                 discreteAuthLink.innerText = "Manage Account Profile";
-                
-                actionBtnContainer.innerHTML = `<button id="logoutBtn" class="auth-btn auth-btn-secondary">Log Out</button>`;
-                document.getElementById('logoutBtn').addEventListener('click', () => window.firebaseLogOut());
                 
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists()) {
                     window.setStatsObject(docSnap.data());
                 }
             } else {
-                badge.style.display = 'none';
-                if(noticeEl) noticeEl.style.display = 'block';
+                userDashboardView.style.display = 'none';
+                guestAuthForm.style.display = 'block';
                 discreteAuthLink.innerText = "Sign In (Optional)";
-                
-                actionBtnContainer.innerHTML = `
-                    <button id="loginBtn" class="auth-btn auth-btn-primary">Log In</button>
-                    <button id="signupBtn" class="auth-btn auth-btn-secondary">Sign Up</button>
-                `;
-                document.getElementById('loginBtn').addEventListener('click', () => window.handleAuthAction('login'));
-                document.getElementById('signupBtn').addEventListener('click', () => window.handleAuthAction('signup'));
+                document.getElementById('passwordDrawer').style.display = 'none';
             }
         });
     </script>
@@ -488,6 +580,7 @@
             <button id="resetBtn" class="btn btn-sub" title="Reset Session">🔄</button>
         </div>
 
+        <!-- Audio Config Panel -->
         <div class="settings-panel">
             <div class="panel-header">Audio System</div>
             <div class="config-row">
@@ -507,6 +600,7 @@
             </div>
         </div>
 
+        <!-- Metric Analytics Dashboard -->
         <div class="settings-panel" style="margin-top: 1.5rem;">
             <div class="panel-header">
                 Performance Dashboard
@@ -524,18 +618,43 @@
             </div>
         </div>
 
+        <!-- Discrete Account Segment Toggle -->
         <button id="discreteAuthLink" class="discrete-auth-toggle">Sign In (Optional)</button>
 
+        <!-- Dynamic Shift Account Board -->
         <div id="authPanel" class="auth-panel">
-            <div class="panel-header" style="margin-bottom:0.5rem;">Sign In Profile</div>
-            <div id="authNoticeText" class="auth-notice">
-                Login option only serves the purpose of saving your stats. If you don't want to sync it you don't need to login.
-            </div>
-            <div id="userBadge" class="user-badge"></div>
-            <input type="email" id="authEmail" placeholder="Email Address">
-            <input type="password" id="authPassword" placeholder="Password">
-            <div id="authActionGroup" class="auth-btn-group">
+            
+            <!-- Structure 1: Unauthenticated Interactive Tab Deck -->
+            <div id="guestAuthForm">
+                <div class="auth-nav-tabs">
+                    <button id="tabLogin" class="auth-tab active">Log In</button>
+                    <button id="tabSignup" class="auth-tab">Create Account</button>
                 </div>
+                <div class="auth-notice">
+                    Login option only serves the purpose of saving your stats. If you don't want to sync it you don't need to login.
+                </div>
+                <input type="email" id="authEmail" placeholder="Email Address">
+                <input type="password" id="authPassword" placeholder="Password">
+                <button id="authSubmitAction" class="auth-submit-btn">Log In</button>
+            </div>
+
+            <!-- Structure 2: Authenticated Dashboard (Hides Credentials cleanly) -->
+            <div id="userDashboardView" class="user-dashboard-view">
+                <div class="panel-header" style="margin:0;">Active User Profile</div>
+                <div id="userEmailDisplay" class="user-badge-header">---</div>
+                
+                <div class="nested-action-row">
+                    <button id="togglePasswordBtn" class="btn-nested-action">Change Password</button>
+                    <button id="logoutBtn" class="btn-nested-action" style="color:#EF4444;">Log Out</button>
+                </div>
+
+                <!-- Hidden Change Password Sub-Drawer -->
+                <div id="passwordDrawer" class="sub-drawer-panel">
+                    <input type="password" id="newPasswordInput" placeholder="Enter New Secure Password">
+                    <button id="submitNewPasswordBtn" class="auth-submit-btn" style="background:#2D2D35; color:#ffffff;">Update Password</button>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -565,7 +684,7 @@
     let oscR = null;
     let gainNode = null;
 
-    // --- Native DOM Binding Layouts ---
+    // --- DOM Elements ---
     const startBtn = document.getElementById('startBtn');
     const skipBtn = document.getElementById('skipBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -576,6 +695,17 @@
     const discreteAuthLink = document.getElementById('discreteAuthLink');
     const authPanel = document.getElementById('authPanel');
     const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+    // UI Interactive Element Hooks
+    const tabLogin = document.getElementById('tabLogin');
+    const tabSignup = document.getElementById('tabSignup');
+    const authSubmitAction = document.getElementById('authSubmitAction');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const passwordDrawer = document.getElementById('passwordDrawer');
+    const submitNewPasswordBtn = document.getElementById('submitNewPasswordBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    let activeAuthMode = 'login'; // Track whether user is toggled to login or signup
 
     function loadAudioSettings() {
         const savedToggle = localStorage.getItem('fp_audio_enabled');
@@ -700,7 +830,7 @@
         toggleTimer();
     }
 
-    // --- Audio Nodes Logic Pool ---
+    // --- Audio System Subroutines ---
     function initAudioNodes() {
         if (!audioToggle.checked) return;
         if (!audioCtx || (oscL && oscR)) return;
@@ -831,31 +961,62 @@
         }
     });
 
-    window.handleAuthAction = function(type) {
+    // --- Interactive Fluid Tab-Deck Controls ---
+    tabLogin.addEventListener('click', () => {
+        activeAuthMode = 'login';
+        tabLogin.classList.add('active');
+        tabSignup.classList.remove('active');
+        authSubmitAction.innerText = 'Log In';
+    });
+
+    tabSignup.addEventListener('click', () => {
+        activeAuthMode = 'signup';
+        tabSignup.classList.add('active');
+        tabLogin.classList.remove('active');
+        authSubmitAction.innerText = 'Register Account';
+    });
+
+    authSubmitAction.addEventListener('click', () => {
         const email = document.getElementById('authEmail').value;
         const pass = document.getElementById('authPassword').value;
         if(!email || !pass) { alert("Please complete form fields."); return; }
         
-        if(type === 'login' && window.firebaseLogIn) window.firebaseLogIn(email, pass);
-        if(type === 'signup' && window.firebaseSignUp) window.firebaseSignUp(email, pass);
-    };
+        if(activeAuthMode === 'login' && window.firebaseLogIn) {
+            window.firebaseLogIn(email, pass);
+        } else if(activeAuthMode === 'signup' && window.firebaseSignUp) {
+            window.firebaseSignUp(email, pass);
+        }
+    });
+
+    // Sub-Dashboard Controls for Authenticated Profiles
+    togglePasswordBtn.addEventListener('click', () => {
+        if (passwordDrawer.style.display === 'block') {
+            passwordDrawer.style.display = 'none';
+        } else {
+            passwordDrawer.style.display = 'block';
+        }
+    });
+
+    submitNewPasswordBtn.addEventListener('click', () => {
+        const newPass = document.getElementById('newPasswordInput').value;
+        if(!newPass || newPass.length < 6) { alert("Password must be at least 6 characters."); return; }
+        if(window.firebaseUpdatePassword) window.firebaseUpdatePassword(newPass);
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        if(window.firebaseLogOut) window.firebaseLogOut();
+    });
 
     // --- App Lifecycle Bootstrapping ---
     loadAudioSettings();
     loadStats();
     updateDisplay();
 
-    // --- Strict Immediate PWA Cache Reset Engine ---
+    // --- Progressive Web App Management ---
     let deferredPrompt = null;
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (let registration of registrations) {
-                registration.unregister(); // Forces broken service workers to die instantly
-            }
-        });
-        
         const swCode = `
-            const CACHE_NAME = 'binaural-flow-v45';
+            const CACHE_NAME = 'binaural-flow-v50';
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
         `;
