@@ -99,7 +99,7 @@
         .auth-nav-tabs { display: flex; background: #111115; border-radius: 10px; padding: 4px; margin-bottom: 1rem; }
         .auth-tab { flex: 1; background: none; border: none; color: var(--text-muted); padding: 0.6rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 7px; text-align: center; }
         .auth-tab.active { background: #25252D; color: var(--text-main); }
-        .auth-notice { background: #121216; border: 1px solid #23232b; border-radius: 12px; padding: 0.95rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem; }
+        .auth-notice { background: #121216; border: 1px dashed #23232b; border-radius: 12px; padding: 0.95rem; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem; text-align: center; }
         .auth-panel input { width: 100%; box-sizing: border-box; margin-bottom: 0.75rem; }
         .auth-submit-btn { width: 100%; background: var(--text-main); color: var(--bg-color); border: none; padding: 0.85rem; font-size: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer; }
         
@@ -111,7 +111,6 @@
         
         .nested-action-row { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
         .btn-nested-action { flex: 1; min-width: 120px; background: transparent; border: 1px solid #2D2D35; color: var(--text-muted); padding: 0.6rem; font-size: 0.8rem; font-weight: 600; border-radius: 10px; cursor: pointer; }
-        .sub-drawer-panel { display: none; border-top: 1px dashed #2D2D35; padding-top: 1rem; margin-top: 0.5rem; }
 
         .social-network-hub { margin-top: 1.5rem; border-top: 1px solid var(--card-border); padding-top: 1.5rem; text-align: left; width: 100%; }
         .search-engine-input-wrapper { display: flex; gap: 8px; margin-bottom: 1rem; }
@@ -136,7 +135,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -164,7 +163,8 @@
                     username: generateFallbackUsername(email),
                     totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
                     completedRounds: window.getStatsObject().completedRounds,
-                    friendsList: []
+                    friendsList: [],
+                    rejectedRequests: [] // Array to store rejected UID requests
                 });
                 document.getElementById('authPanel').style.display = 'none';
             } catch (err) { alert(err.message); }
@@ -191,7 +191,6 @@
             } catch (err) { alert("Deletion failed: " + err.message); }
         };
 
-        // NEW: Max Merge Logic to prevent unstable stats resetting
         window.syncStatsToCloud = async () => {
             if (auth.currentUser) {
                 try {
@@ -224,7 +223,6 @@
             } catch(e) { console.error(e); }
         };
 
-        // NEW: Friend Request System (Client-Side Mutual Graph)
         window.sendFriendRequest = async () => {
             if(!auth.currentUser || !discoveredUserDoc) return;
             try {
@@ -240,6 +238,15 @@
             if(!auth.currentUser) return;
             try {
                 await updateDoc(doc(db, "users", auth.currentUser.uid), { friendsList: arrayUnion(senderUid) });
+                window.refreshSocialHubData();
+            } catch(e) { console.error(e); }
+        };
+
+        window.rejectFriend = async (senderUid) => {
+            if(!auth.currentUser) return;
+            try {
+                // Adds the sender's UID to your personal "ignored" list
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { rejectedRequests: arrayUnion(senderUid) });
                 window.refreshSocialHubData();
             } catch(e) { console.error(e); }
         };
@@ -261,6 +268,7 @@
                 
                 const myData = myDoc.data();
                 const myFriends = myData.friendsList || [];
+                const myRejected = myData.rejectedRequests || []; // Pull ignored users
 
                 // 1. Find who added ME
                 const incomingQ = query(collection(db, "users"), where("friendsList", "array-contains", myUid));
@@ -271,7 +279,10 @@
                 
                 incomingSnap.forEach(d => {
                     usersWhoAddedMe.add(d.id);
-                    if (!myFriends.includes(d.id)) incomingRequests.push({ uid: d.id, ...d.data() }); // They added me, I haven't added them back
+                    // Only show incoming request if they aren't my friend AND I haven't explicitly rejected them
+                    if (!myFriends.includes(d.id) && !myRejected.includes(d.id)) {
+                        incomingRequests.push({ uid: d.id, ...d.data() }); 
+                    }
                 });
 
                 // 2. Resolve My List (Mutuals vs Pending)
@@ -301,7 +312,10 @@
                     const row = document.createElement('div');
                     row.className = 'friend-row-item';
                     row.innerHTML = `<div class="friend-identity-capsule"><strong>${req.username}</strong></div>
-                                     <button class="search-engine-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:#10B981;" onclick="window.acceptFriend('${req.uid}')">Accept Request</button>`;
+                                     <div style="display:flex; gap: 6px;">
+                                        <button class="search-engine-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:#10B981;" onclick="window.acceptFriend('${req.uid}')">Accept</button>
+                                        <button class="search-engine-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:#EF4444;" onclick="window.rejectFriend('${req.uid}')">Reject</button>
+                                     </div>`;
                     reqContainer.appendChild(row);
                 });
 
@@ -321,7 +335,7 @@
                     leaderboardList.appendChild(row);
                 });
 
-                // Render Friend Management List (Confirmed & Pending)
+                // Render Friend Management List
                 const friendsListContainer = document.getElementById('friendsListContainer');
                 friendsListContainer.innerHTML = '';
                 [...confirmedFriends, ...pendingSent].forEach(f => {
@@ -349,7 +363,6 @@
                     const cloudData = docSnap.data();
                     document.getElementById('usernameDisplayLabel').textContent = cloudData.username;
                     
-                    // NEW: Strict Merge logic to prevent 0-minute resets
                     const localStats = window.getStatsObject();
                     const mergedMins = Math.max(localStats.totalFocusMinutes, cloudData.totalFocusMinutes || 0);
                     const mergedRounds = Math.max(localStats.completedRounds, cloudData.completedRounds || 0);
@@ -412,6 +425,9 @@
 
         <div id="authPanel" class="auth-panel">
             <div id="guestAuthForm">
+                <!-- NEW INSTRUCTION TEXT ADDED HERE -->
+                <div class="auth-notice">Sign in to securely sync your focus sessions across devices and build your flow network.</div>
+                
                 <div class="auth-nav-tabs">
                     <button id="tabLogin" class="auth-tab active">Log In</button>
                     <button id="tabSignup" class="auth-tab">Register</button>
@@ -458,7 +474,6 @@
             <div class="panel-header" style="margin-top:1.25rem; font-size:0.75rem;">Manage Friend List</div>
             <div id="friendsListContainer" class="friends-list-container"></div>
 
-            <!-- NEW: Closeable Instruction Box -->
             <div class="social-matrix-guide-box" id="instructionGuideBox">
                 <button class="close-guide-btn" onclick="document.getElementById('instructionGuideBox').style.display='none'">&times;</button>
                 <div class="panel-header" style="font-size:0.65rem; margin-bottom:0.5rem; color:var(--text-main);">How Friends Work</div>
