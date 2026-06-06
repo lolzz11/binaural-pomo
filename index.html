@@ -101,7 +101,7 @@
         .auth-tab.active { background: #25252D; color: var(--text-main); }
         .auth-notice { background: #121216; border: 1px dashed #23232b; border-radius: 12px; padding: 0.95rem; font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem; text-align: center; }
         .auth-panel input { width: 100%; box-sizing: border-box; margin-bottom: 0.75rem; }
-        .auth-submit-btn { width: 100%; background: var(--text-main); color: var(--bg-color); border: none; padding: 0.85rem; font-size: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer; }
+        .auth-submit-btn { width: 100%; background: var(--text-main); color: var(--bg-color); border: none; padding: 0.85rem; font-size: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer; margin-top: 0.5rem; }
         
         .user-dashboard-view { display: none; flex-direction: column; gap: 1rem; }
         .profile-customizer-box { display: flex; gap: 12px; align-items: center; background: #111115; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.02); }
@@ -131,6 +131,18 @@
         .social-matrix-guide-box li { margin-bottom: 0.4rem; }
         .close-guide-btn { position: absolute; top: 8px; right: 12px; background: none; border: none; color: #EF4444; font-size: 1.2rem; cursor: pointer; opacity: 0.7; }
         .close-guide-btn:hover { opacity: 1; }
+
+        /* CUSTOM MODAL SYSTEM STYLES */
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .custom-modal-box { background: #16161A; border: 1px solid #2D2D35; padding: 2rem; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .custom-modal-title { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; }
+        .custom-modal-message { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; }
+        .custom-modal-input { width: 100%; box-sizing: border-box; background: #111115; color: var(--text-main); border: 1px solid #2D2D35; padding: 0.8rem; border-radius: 10px; margin-bottom: 1.5rem; display: none; outline: none; font-size: 0.9rem; }
+        .custom-modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .custom-modal-btn { padding: 0.8rem 1.2rem; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; flex: 1; transition: opacity 0.2s; }
+        .custom-modal-btn:hover { opacity: 0.8; }
+        .custom-modal-btn-cancel { background: #212126; color: var(--text-main); }
+        .custom-modal-btn-confirm { background: var(--theme-accent); color: white; }
     </style>
 
     <script type="module">
@@ -154,27 +166,59 @@
 
         let discoveredUserDoc = null;
 
-        const generateFallbackUsername = (email) => email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').substring(0, 10) + Math.floor(100 + Math.random() * 900);
+        // Custom Modal UI Logic
+        let modalCallback = null;
+        window.showModal = (title, message, type = 'alert', callback = null) => {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            const input = document.getElementById('modalInput');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            
+            input.style.display = type === 'prompt' ? 'block' : 'none';
+            input.value = '';
+            cancelBtn.style.display = (type === 'confirm' || type === 'prompt') ? 'block' : 'none';
+            confirmBtn.textContent = type === 'alert' ? 'OK' : 'Confirm';
+            
+            modalCallback = callback;
+            document.getElementById('customModal').style.display = 'flex';
+            if(type === 'prompt') input.focus();
+        };
 
-        window.firebaseSignUp = async (email, password) => {
+        document.getElementById('modalCancelBtn').addEventListener('click', () => {
+            document.getElementById('customModal').style.display = 'none';
+            if(modalCallback) modalCallback(null);
+        });
+        
+        document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+            document.getElementById('customModal').style.display = 'none';
+            const val = document.getElementById('modalInput').style.display === 'block' ? document.getElementById('modalInput').value : true;
+            if(modalCallback) modalCallback(val);
+        });
+
+        window.firebaseSignUp = async (email, password, username) => {
+            if (!username || username.trim() === '') {
+                window.showModal("Required", "Please choose a username for the leaderboard.", "alert");
+                return;
+            }
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 await setDoc(doc(db, "users", cred.user.uid), {
-                    username: generateFallbackUsername(email),
+                    username: username.trim(),
                     totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
                     completedRounds: window.getStatsObject().completedRounds,
                     friendsList: [],
-                    rejectedRequests: [] // Array to store rejected UID requests
+                    rejectedRequests: []
                 });
                 document.getElementById('authPanel').style.display = 'none';
-            } catch (err) { alert(err.message); }
+            } catch (err) { window.showModal("Registration Error", err.message, "alert"); }
         };
 
         window.firebaseLogIn = async (email, password) => {
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 document.getElementById('authPanel').style.display = 'none';
-            } catch (err) { alert(err.message); }
+            } catch (err) { window.showModal("Login Error", err.message, "alert"); }
         };
 
         window.firebaseLogOut = () => signOut(auth);
@@ -186,9 +230,10 @@
                 await reauthenticateWithCredential(auth.currentUser, credential);
                 await deleteDoc(doc(db, "users", auth.currentUser.uid));
                 await deleteUser(auth.currentUser);
-                alert("Account permanently deleted.");
-                window.location.reload();
-            } catch (err) { alert("Deletion failed: " + err.message); }
+                window.showModal("Farewell", "Account permanently deleted. Goodbye!", "alert", () => {
+                    window.location.reload();
+                });
+            } catch (err) { window.showModal("Deletion Failed", err.message, "alert"); }
         };
 
         window.syncStatsToCloud = async () => {
@@ -209,7 +254,10 @@
             discoveredUserDoc = null;
             const cleanQuery = searchString.trim();
             if(!cleanQuery) return;
-            if(cleanQuery === document.getElementById('usernameDisplayLabel').textContent) { alert("You cannot add yourself."); return; }
+            if(cleanQuery === document.getElementById('usernameDisplayLabel').textContent) { 
+                window.showModal("Notice", "You cannot add yourself.", "alert"); 
+                return; 
+            }
 
             try {
                 const q = query(collection(db, "users"), where("username", "==", cleanQuery));
@@ -219,7 +267,7 @@
                     discoveredUserDoc = { uid: snap.id, ...snap.data() };
                     document.getElementById('searchResultName').textContent = discoveredUserDoc.username;
                     feedbackCard.style.display = 'flex';
-                } else { alert("No matching runner found."); }
+                } else { window.showModal("Search Result", "No matching runner found.", "alert"); }
             } catch(e) { console.error(e); }
         };
 
@@ -229,7 +277,7 @@
                 await updateDoc(doc(db, "users", auth.currentUser.uid), { friendsList: arrayUnion(discoveredUserDoc.uid) });
                 document.getElementById('searchFeedbackCard').style.display = 'none';
                 document.getElementById('friendSearchInput').value = '';
-                alert(`Friend request sent to ${discoveredUserDoc.username}! They must accept it to appear on your leaderboard.`);
+                window.showModal("Sent!", `Friend request sent to ${discoveredUserDoc.username}! They must accept it to appear on your leaderboard.`, "alert");
                 window.refreshSocialHubData();
             } catch(e) { console.error(e); }
         };
@@ -245,7 +293,6 @@
         window.rejectFriend = async (senderUid) => {
             if(!auth.currentUser) return;
             try {
-                // Adds the sender's UID to your personal "ignored" list
                 await updateDoc(doc(db, "users", auth.currentUser.uid), { rejectedRequests: arrayUnion(senderUid) });
                 window.refreshSocialHubData();
             } catch(e) { console.error(e); }
@@ -268,9 +315,8 @@
                 
                 const myData = myDoc.data();
                 const myFriends = myData.friendsList || [];
-                const myRejected = myData.rejectedRequests || []; // Pull ignored users
+                const myRejected = myData.rejectedRequests || []; 
 
-                // 1. Find who added ME
                 const incomingQ = query(collection(db, "users"), where("friendsList", "array-contains", myUid));
                 const incomingSnap = await getDocs(incomingQ);
                 
@@ -279,13 +325,11 @@
                 
                 incomingSnap.forEach(d => {
                     usersWhoAddedMe.add(d.id);
-                    // Only show incoming request if they aren't my friend AND I haven't explicitly rejected them
                     if (!myFriends.includes(d.id) && !myRejected.includes(d.id)) {
                         incomingRequests.push({ uid: d.id, ...d.data() }); 
                     }
                 });
 
-                // 2. Resolve My List (Mutuals vs Pending)
                 let confirmedFriends = [];
                 let pendingSent = [];
 
@@ -297,13 +341,12 @@
                         const q = query(collection(db, "users"), where("__name__", "in", chunk));
                         const snap = await getDocs(q);
                         snap.forEach(fDoc => {
-                            if (usersWhoAddedMe.has(fDoc.id)) confirmedFriends.push({ uid: fDoc.id, ...fDoc.data() }); // Mutual
-                            else pendingSent.push({ uid: fDoc.id, ...fDoc.data() }); // I sent, they haven't accepted
+                            if (usersWhoAddedMe.has(fDoc.id)) confirmedFriends.push({ uid: fDoc.id, ...fDoc.data() }); 
+                            else pendingSent.push({ uid: fDoc.id, ...fDoc.data() }); 
                         });
                     }
                 }
 
-                // Render Incoming Requests
                 const reqContainer = document.getElementById('incomingRequestsContainer');
                 reqContainer.innerHTML = '';
                 document.getElementById('requestsHeader').style.display = incomingRequests.length > 0 ? 'block' : 'none';
@@ -319,7 +362,6 @@
                     reqContainer.appendChild(row);
                 });
 
-                // Render Leaderboard (Only Mutual Friends + Me)
                 const leaderboardList = document.getElementById('leaderboardList');
                 leaderboardList.innerHTML = '';
                 
@@ -335,7 +377,6 @@
                     leaderboardList.appendChild(row);
                 });
 
-                // Render Friend Management List
                 const friendsListContainer = document.getElementById('friendsListContainer');
                 friendsListContainer.innerHTML = '';
                 [...confirmedFriends, ...pendingSent].forEach(f => {
@@ -381,6 +422,18 @@
 </head>
 <body>
 
+<div id="customModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div id="modalTitle" class="custom-modal-title">Title</div>
+        <div id="modalMessage" class="custom-modal-message">Message</div>
+        <input type="password" id="modalInput" class="custom-modal-input" placeholder="Enter password...">
+        <div class="custom-modal-actions">
+            <button id="modalCancelBtn" class="custom-modal-btn custom-modal-btn-cancel">Cancel</button>
+            <button id="modalConfirmBtn" class="custom-modal-btn custom-modal-btn-confirm">OK</button>
+        </div>
+    </div>
+</div>
+
 <div class="app-shell" id="appShell">
     <div class="relative-content">
         
@@ -425,13 +478,14 @@
 
         <div id="authPanel" class="auth-panel">
             <div id="guestAuthForm">
-                <!-- NEW INSTRUCTION TEXT ADDED HERE -->
                 <div class="auth-notice">Sign in to securely sync your focus sessions across devices and build your flow network.</div>
                 
                 <div class="auth-nav-tabs">
                     <button id="tabLogin" class="auth-tab active">Log In</button>
                     <button id="tabSignup" class="auth-tab">Register</button>
                 </div>
+                
+                <input type="text" id="authUsername" placeholder="Choose a Username" style="display:none;">
                 <input type="email" id="authEmail" placeholder="Email Address">
                 <input type="password" id="authPassword" placeholder="Password">
                 <button id="authSubmitAction" class="auth-submit-btn">Log In</button>
@@ -508,6 +562,10 @@
     let audioCtx = null, oscL = null, oscR = null, gainNode = null;
 
     const startBtn = document.getElementById('startBtn'), skipBtn = document.getElementById('skipBtn'), resetBtn = document.getElementById('resetBtn');
+    
+    // Load saved volume
+    const savedVol = localStorage.getItem('fp_vol');
+    if (savedVol !== null) document.getElementById('volume').value = savedVol;
 
     function updateStatUI() {
         document.getElementById('statMinutes').textContent = stats.totalFocusMinutes;
@@ -587,10 +645,17 @@
 
     document.getElementById('audioToggle').addEventListener('change', () => { if (document.getElementById('audioToggle').checked && timerId && currentMode === 'focus') startAudio(); else stopAudio(); });
     document.getElementById('wavePreset').addEventListener('change', () => { if(oscR) oscR.frequency.value = document.getElementById('wavePreset').value === 'beta' ? 195 : 190; });
-    document.getElementById('volume').addEventListener('input', (e) => { if(gainNode) gainNode.gain.value = parseFloat(e.target.value); });
+    
+    document.getElementById('volume').addEventListener('input', (e) => { 
+        const val = parseFloat(e.target.value);
+        localStorage.setItem('fp_vol', val); // Save preference instantly
+        if(gainNode) gainNode.gain.value = val; 
+    });
 
     document.getElementById('clearMetricsLink').addEventListener('click', () => {
-        if(confirm("Wipe clear your performance metrics dashboard logs?")) { window.setStatsObject({ totalFocusMinutes: 0, completedRounds: 0 }); if(window.syncStatsToCloud) window.syncStatsToCloud(); }
+        window.showModal("Clear Metrics", "Wipe clear your performance metrics dashboard logs?", "confirm", (agreed) => {
+            if(agreed) { window.setStatsObject({ totalFocusMinutes: 0, completedRounds: 0 }); if(window.syncStatsToCloud) window.syncStatsToCloud(); }
+        });
     });
 
     document.getElementById('discreteAuthLink').addEventListener('click', () => {
@@ -599,19 +664,30 @@
     });
 
     let authMode = 'login';
-    document.getElementById('tabLogin').addEventListener('click', (e) => { authMode='login'; e.target.classList.add('active'); document.getElementById('tabSignup').classList.remove('active'); document.getElementById('authSubmitAction').textContent='Log In'; });
-    document.getElementById('tabSignup').addEventListener('click', (e) => { authMode='signup'; e.target.classList.add('active'); document.getElementById('tabLogin').classList.remove('active'); document.getElementById('authSubmitAction').textContent='Register'; });
+    document.getElementById('tabLogin').addEventListener('click', (e) => { 
+        authMode='login'; e.target.classList.add('active'); document.getElementById('tabSignup').classList.remove('active'); 
+        document.getElementById('authSubmitAction').textContent='Log In'; 
+        document.getElementById('authUsername').style.display = 'none';
+    });
+    document.getElementById('tabSignup').addEventListener('click', (e) => { 
+        authMode='signup'; e.target.classList.add('active'); document.getElementById('tabLogin').classList.remove('active'); 
+        document.getElementById('authSubmitAction').textContent='Register'; 
+        document.getElementById('authUsername').style.display = 'block';
+    });
     document.getElementById('authSubmitAction').addEventListener('click', () => {
         const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value;
-        if(authMode === 'login') window.firebaseLogIn(e, p); else window.firebaseSignUp(e, p);
+        if(authMode === 'login') window.firebaseLogIn(e, p); else window.firebaseSignUp(e, p, document.getElementById('authUsername').value);
     });
 
     document.getElementById('logoutBtn').addEventListener('click', () => window.firebaseLogOut());
     document.getElementById('deleteAccountBtn').addEventListener('click', () => {
-        if(confirm("⚠️ WARNING: This will permanently erase your profile. Are you sure?")) {
-            const pass = prompt("Enter your password to confirm permanent account deletion:");
-            if(pass) window.firebaseDeleteAccount(pass);
-        }
+        window.showModal("Warning", "This will permanently erase your profile and stats. Are you sure?", "confirm", (agreed) => {
+            if (agreed) {
+                window.showModal("Delete Account", "Enter your password to confirm permanent account deletion:", "prompt", (pass) => {
+                    if(pass) window.firebaseDeleteAccount(pass);
+                });
+            }
+        });
     });
 
     document.getElementById('friendSearchBtn').addEventListener('click', () => window.executeUsernameSearch(document.getElementById('friendSearchInput').value));
