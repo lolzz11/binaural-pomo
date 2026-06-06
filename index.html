@@ -19,14 +19,7 @@
             "background_color": "#0F0F11",
             "theme_color": "#121214",
             "orientation": "portrait",
-            "icons": [
-                {
-                    "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%2316161a%22/><circle cx=%2250%22 cy=%2250%22 r=%2222%22 fill=%22none%22 stroke=%22%237E7E86%22 stroke-width=%225%22/><circle cx=%2250%22 cy=%2250%22 r=%228%22 fill=%22%237E7E86%22/></svg>",
-                    "sizes": "512x512",
-                    "type": "image/svg+xml",
-                    "purpose": "any maskable"
-                }
-            ]
+            "icons": [{"src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%2316161a%22/><circle cx=%2250%22 cy=%2250%22 r=%2222%22 fill=%22none%22 stroke=%22%237E7E86%22 stroke-width=%225%22/><circle cx=%2250%22 cy=%2250%22 r=%228%22 fill=%22%237E7E86%22/></svg>","sizes": "512x512","type": "image/svg+xml","purpose": "any maskable"}]
         };
         const manifestBlob = new Blob([JSON.stringify(manifestObj)], {type: 'application/json'});
         const manifestLink = document.createElement('link');
@@ -37,535 +30,114 @@
 
     <style>
         :root {
-            --bg-color: #0F0F11;
-            --card-bg: #16161A;
-            --card-border: #232329;
-            --text-main: #F4F4F6;
-            --text-muted: #7E7E86;
-            
-            --focus-glow: rgba(239, 68, 68, 0.08);
-            --focus-accent: #EF4444;
-            --break-glow: rgba(16, 185, 129, 0.08);
-            --break-accent: #10B981;
-            --long-glow: rgba(59, 130, 246, 0.08);
-            --long-accent: #3B82F6;
-            
-            --theme-glow: var(--focus-glow);
-            --theme-accent: var(--focus-accent);
+            --bg-color: #0F0F11; --card-bg: #16161A; --card-border: #232329;
+            --text-main: #F4F4F6; --text-muted: #7E7E86;
+            --focus-glow: rgba(239, 68, 68, 0.08); --focus-accent: #EF4444;
+            --break-glow: rgba(16, 185, 129, 0.08); --break-accent: #10B981;
+            --long-glow: rgba(59, 130, 246, 0.08); --long-accent: #3B82F6;
+            --theme-glow: var(--focus-glow); --theme-accent: var(--focus-accent);
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
+        html { scroll-behavior: smooth; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
+            background: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px;
+            box-sizing: border-box; -webkit-font-smoothing: antialiased;
         }
 
         .app-shell {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 2.5rem 2rem;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 410px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
-            transition: border-color 0.4s ease;
+            background: var(--card-bg); border: 1px solid var(--card-border); padding: 2.5rem 2rem;
+            border-radius: 24px; width: 100%; max-width: 410px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            position: relative; overflow: hidden; transition: border-color 0.4s ease;
         }
 
         .app-shell::before {
-            content: '';
-            position: absolute;
-            top: -10%;
-            left: 10%;
-            right: 10%;
-            height: 220px;
-            background: var(--theme-glow);
-            filter: blur(60px);
-            border-radius: 50%;
-            z-index: 0;
-            transition: background 0.5s ease;
-            pointer-events: none;
+            content: ''; position: absolute; top: -10%; left: 10%; right: 10%; height: 220px;
+            background: var(--theme-glow); filter: blur(60px); border-radius: 50%; z-index: 0;
+            transition: background 0.5s ease; pointer-events: none;
         }
 
-        .relative-content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .top-action-bar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 1.5rem;
-        }
-
-        #pwaInstallBtn {
-            display: none;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            font-size: 0.8rem;
-            border-radius: 10px;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: all 0.2s ease;
-        }
+        .relative-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
 
         .status-badge {
-            display: inline-block;
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--theme-accent);
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 0.4rem 1rem;
-            border-radius: 100px;
-            margin-bottom: 0.5rem;
-            transition: color 0.4s ease;
-            text-align: center;
+            font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--theme-accent); background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.4rem 1rem; border-radius: 100px; margin-bottom: 0.5rem; transition: color 0.4s ease; text-align: center;
         }
 
-        .timer-display {
-            font-size: 5rem;
-            font-weight: 300;
-            letter-spacing: -2px;
-            margin: 0.5rem auto;
-            font-variant-numeric: tabular-nums;
-            text-align: center;
-            width: 100%;
-        }
+        .timer-display { font-size: 5rem; font-weight: 300; letter-spacing: -2px; margin: 0.5rem auto; font-variant-numeric: tabular-nums; text-align: center; width: 100%; }
+        .cycle-tracker { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 2rem; font-weight: 500; width: 100%; text-align: center; }
 
-        .cycle-tracker {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            margin-bottom: 2rem;
-            font-weight: 500;
-            width: 100%;
-            text-align: center;
-        }
+        .primary-controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 2.5rem; width: 100%; }
+        .btn { font-size: 0.95rem; font-weight: 600; border-radius: 14px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); outline: none; }
+        .btn-main { background: var(--text-main); color: var(--bg-color); border: none; padding: 0.9rem 2rem; flex-grow: 1; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1); }
+        .btn-main:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15); }
+        .btn-sub { background: #212126; color: var(--text-main); border: 1px solid #2D2D35; padding: 0.9rem 1.2rem; }
+        .btn-sub:hover { background: #2D2D35; color: #ffffff; }
 
-        .primary-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 2.5rem;
-            width: 100%;
-        }
+        .settings-panel { border-top: 1px solid var(--card-border); padding-top: 1.5rem; text-align: left; width: 100%; }
+        .panel-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 1.25rem; font-weight: 700; }
+        .config-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .config-row label { font-size: 0.9rem; font-weight: 500; color: #C4C4C6; }
 
-        .btn {
-            font-size: 0.95rem;
-            font-weight: 600;
-            border-radius: 14px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            outline: none;
-        }
+        select, .auth-panel input { background: #111115; color: var(--text-main); border: 1px solid #2D2D35; padding: 0.65rem 0.75rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; outline: none; }
+        input[type="checkbox"] { accent-color: var(--theme-accent); width: 16px; height: 16px; cursor: pointer; }
+        input[type="range"] { -webkit-appearance: none; width: 110px; background: #2A2A32; height: 4px; border-radius: 2px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--text-main); cursor: pointer; }
 
-        .btn-main {
-            background: var(--text-main);
-            color: var(--bg-color);
-            border: none;
-            padding: 0.9rem 2rem;
-            flex-grow: 1;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
-        }
-        .btn-main:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
-        }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 0.5rem; }
+        .metric-tile { background: #1A1A1F; border: 1px solid #212127; padding: 1rem; border-radius: 14px; text-align: center; }
+        .metric-value { font-size: 1.6rem; font-weight: 600; color: var(--text-main); }
+        .metric-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; font-weight: 500; }
+        .reset-link { background: none; border: none; color: #EF4444; font-size: 0.75rem; font-weight: 600; cursor: pointer; float: right; opacity: 0.6; }
 
-        .btn-sub {
-            background: #212126;
-            color: var(--text-main);
-            border: 1px solid #2D2D35;
-            padding: 0.9rem 1.2rem;
-        }
-        .btn-sub:hover {
-            background: #2D2D35;
-            color: #ffffff;
-        }
+        .discrete-auth-toggle { display: block; width: 100%; background: none; border: none; color: var(--text-muted); font-size: 0.75rem; text-decoration: underline; margin-top: 1.5rem; cursor: pointer; text-align: center; opacity: 0.5; }
 
-        .settings-panel {
-            border-top: 1px solid var(--card-border);
-            padding-top: 1.5rem;
-            text-align: left;
-            width: 100%;
-        }
-
-        .panel-header {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            margin-bottom: 1.25rem;
-            font-weight: 700;
-        }
-
-        .config-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.25rem;
-        }
-
-        .config-row label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #C4C4C6;
-        }
-
-        select, .auth-panel input {
-            background: #111115;
-            color: var(--text-main);
-            border: 1px solid #2D2D35;
-            padding: 0.65rem 0.75rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            outline: none;
-        }
-
-        input[type="checkbox"] {
-            accent-color: var(--theme-accent);
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-
-        input[type="range"] {
-            -webkit-appearance: none;
-            width: 110px;
-            background: #2A2A32;
-            height: 4px;
-            border-radius: 2px;
-            outline: none;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: var(--text-main);
-            cursor: pointer;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 0.5rem;
-        }
-
-        .metric-tile {
-            background: #1A1A1F;
-            border: 1px solid #212127;
-            padding: 1rem;
-            border-radius: 14px;
-            text-align: center;
-        }
-
-        .metric-value {
-            font-size: 1.6rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .metric-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-            font-weight: 500;
-        }
-
-        .reset-link {
-            background: none;
-            border: none;
-            color: #EF4444;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            float: right;
-            opacity: 0.6;
-        }
-
-        .discrete-auth-toggle {
-            display: block;
-            width: 100%;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            text-decoration: underline;
-            margin-top: 1.5rem;
-            cursor: pointer;
-            text-align: center;
-            opacity: 0.5;
-        }
-
-        .auth-panel {
-            background: #1A1A1F;
-            border: 1px solid var(--card-border);
-            border-radius: 18px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            display: none;
-            width: 100%;
-            box-sizing: border-box;
-        }
+        .auth-panel { background: #1A1A1F; border: 1px solid var(--card-border); border-radius: 18px; padding: 1.5rem; margin-top: 1rem; display: none; width: 100%; box-sizing: border-box; }
+        .auth-nav-tabs { display: flex; background: #111115; border-radius: 10px; padding: 4px; margin-bottom: 1rem; }
+        .auth-tab { flex: 1; background: none; border: none; color: var(--text-muted); padding: 0.6rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 7px; text-align: center; }
+        .auth-tab.active { background: #25252D; color: var(--text-main); }
+        .auth-notice { background: #121216; border: 1px solid #23232b; border-radius: 12px; padding: 0.95rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem; }
+        .auth-panel input { width: 100%; box-sizing: border-box; margin-bottom: 0.75rem; }
+        .auth-submit-btn { width: 100%; background: var(--text-main); color: var(--bg-color); border: none; padding: 0.85rem; font-size: 0.9rem; font-weight: 700; border-radius: 12px; cursor: pointer; }
         
-        .auth-nav-tabs {
-            display: flex;
-            background: #111115;
-            border-radius: 10px;
-            padding: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .auth-tab {
-            flex: 1;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            padding: 0.6rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 7px;
-            text-align: center;
-        }
-
-        .auth-tab.active {
-            background: #25252D;
-            color: var(--text-main);
-        }
+        .user-dashboard-view { display: none; flex-direction: column; gap: 1rem; }
+        .profile-customizer-box { display: flex; gap: 12px; align-items: center; background: #111115; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.02); }
+        .profile-text-fields { flex-grow: 1; display: flex; flex-direction: column; text-align: left; }
+        .profile-username-tag { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+        .profile-email-subtext { font-size: 0.75rem; color: var(--text-muted); }
         
-        .auth-notice {
-            background: #121216;
-            border: 1px solid #23232b;
-            border-radius: 12px;
-            padding: 0.95rem;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 1.25rem;
-        }
+        .nested-action-row { display: flex; gap: 8px; width: 100%; flex-wrap: wrap; }
+        .btn-nested-action { flex: 1; min-width: 120px; background: transparent; border: 1px solid #2D2D35; color: var(--text-muted); padding: 0.6rem; font-size: 0.8rem; font-weight: 600; border-radius: 10px; cursor: pointer; }
+        .sub-drawer-panel { display: none; border-top: 1px dashed #2D2D35; padding-top: 1rem; margin-top: 0.5rem; }
 
-        .auth-panel input {
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 0.75rem;
-        }
-
-        .auth-submit-btn {
-            width: 100%;
-            background: var(--text-main);
-            color: var(--bg-color);
-            border: none;
-            padding: 0.85rem;
-            font-size: 0.9rem;
-            font-weight: 700;
-            border-radius: 12px;
-            cursor: pointer;
-        }
+        .social-network-hub { margin-top: 1.5rem; border-top: 1px solid var(--card-border); padding-top: 1.5rem; text-align: left; width: 100%; }
+        .search-engine-input-wrapper { display: flex; gap: 8px; margin-bottom: 1rem; }
+        .search-engine-input-wrapper input { flex-grow: 1; background: #1A1A1F; border: 1px solid #2D2D35; color: var(--text-main); padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.85rem; outline: none; }
+        .search-engine-btn { background: var(--text-main); color: var(--bg-color); border: none; padding: 0.6rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
         
-        .user-dashboard-view {
-            display: none;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .profile-customizer-box {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            background: #111115;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.02);
-        }
-
-        .profile-text-fields {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-        }
-
-        .profile-username-tag {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .profile-email-subtext {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .nested-action-row {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .btn-nested-action {
-            flex: 1;
-            background: transparent;
-            border: 1px solid #2D2D35;
-            color: var(--text-muted);
-            padding: 0.6rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        .sub-drawer-panel {
-            display: none;
-            border-top: 1px dashed #2D2D35;
-            padding-top: 1rem;
-            margin-top: 0.5rem;
-        }
-
-        .social-network-hub {
-            margin-top: 1.5rem;
-            border-top: 1px solid var(--card-border);
-            padding-top: 1.5rem;
-            text-align: left;
-            width: 100%;
-        }
-
-        .search-engine-input-wrapper {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 1rem;
-        }
-
-        .search-engine-input-wrapper input {
-            flex-grow: 1;
-            background: #1A1A1F;
-            border: 1px solid #2D2D35;
-            color: var(--text-main);
-            padding: 0.6rem 0.8rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            outline: none;
-        }
-
-        .search-engine-btn {
-            background: var(--text-main);
-            color: var(--bg-color);
-            border: none;
-            padding: 0.6rem 1rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .search-feedback-card {
-            display: none;
-            background: #111115;
-            border: 1px solid #232329;
-            padding: 0.75rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .leaderboard-list, .friends-list-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 1rem;
-        }
-
-        .leaderboard-row-item, .friend-row-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #111115;
-            padding: 0.65rem 0.85rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
-        }
-
-        .rank-identity-capsule, .friend-identity-capsule {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-main);
-        }
-
-        .rank-position-index {
-            font-weight: 800;
-            color: var(--theme-accent);
-            width: 16px;
-        }
-
-        .remove-friend-btn {
-            background: none;
-            border: none;
-            color: #EF4444;
-            cursor: pointer;
-            font-size: 0.8rem;
-            opacity: 0.6;
-        }
+        .search-feedback-card { display: none; background: #111115; border: 1px solid #232329; padding: 0.75rem; border-radius: 10px; margin-bottom: 1rem; align-items: center; justify-content: space-between; }
+        
+        .leaderboard-list, .friends-list-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+        .friend-row-item { display: flex; align-items: center; justify-content: space-between; background: #111115; padding: 0.65rem 0.85rem; border-radius: 10px; font-size: 0.85rem; }
+        .rank-identity-capsule, .friend-identity-capsule { display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        .rank-position-index { font-weight: 800; color: var(--theme-accent); width: 16px; }
+        .remove-friend-btn { background: none; border: none; color: #EF4444; cursor: pointer; font-size: 0.8rem; opacity: 0.6; }
         .remove-friend-btn:hover { opacity: 1; }
 
-        .social-matrix-guide-box {
-            background: #141419;
-            border: 1px dashed #2A2A35;
-            border-radius: 12px;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .social-matrix-guide-box ul {
-            margin: 0;
-            padding-left: 1.15rem;
-            color: var(--text-muted);
-            font-size: 0.78rem;
-            line-height: 1.5;
-        }
-        
-        .social-matrix-guide-box li {
-            margin-bottom: 0.4rem;
-        }
-        
-        .social-matrix-guide-box li:last-child {
-            margin-bottom: 0;
-        }
+        .social-matrix-guide-box { background: #141419; border: 1px dashed #2A2A35; border-radius: 12px; padding: 1rem; margin-top: 1rem; position: relative; }
+        .social-matrix-guide-box ul { margin: 0; padding-left: 1.15rem; color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; }
+        .social-matrix-guide-box li { margin-bottom: 0.4rem; }
+        .close-guide-btn { position: absolute; top: 8px; right: 12px; background: none; border: none; color: #EF4444; font-size: 1.2rem; cursor: pointer; opacity: 0.7; }
+        .close-guide-btn:hover { opacity: 1; }
     </style>
 
-    <!-- Unified Firebase Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, updatePassword, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCRY64EvtgTPPCaNA2q9BiQyV0_3HZuD6E",
@@ -583,33 +155,17 @@
 
         let discoveredUserDoc = null;
 
-        const isValidUsername = (username) => {
-            const regex = /^[a-zA-Z0-9_]{3,15}$/;
-            return regex.test(username);
-        };
-
-        const generateFallbackUsername = (email) => {
-            return email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').substring(0, 10) + Math.floor(100 + Math.random() * 900);
-        };
+        const generateFallbackUsername = (email) => email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').substring(0, 10) + Math.floor(100 + Math.random() * 900);
 
         window.firebaseSignUp = async (email, password) => {
-            if (password.length < 8) {
-                alert("Security policy update: Password must be at least 8 characters long.");
-                return;
-            }
             try {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
-                await sendEmailVerification(cred.user);
-                alert("Account created! Verify your link inside your incoming mailbox.");
-                
-                const baseProfile = {
+                await setDoc(doc(db, "users", cred.user.uid), {
                     username: generateFallbackUsername(email),
                     totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
                     completedRounds: window.getStatsObject().completedRounds,
                     friendsList: []
-                };
-
-                await setDoc(doc(db, "users", cred.user.uid), baseProfile);
+                });
                 document.getElementById('authPanel').style.display = 'none';
             } catch (err) { alert(err.message); }
         };
@@ -621,25 +177,21 @@
             } catch (err) { alert(err.message); }
         };
 
-        window.firebaseLogOut = () => { signOut(auth); };
+        window.firebaseLogOut = () => signOut(auth);
 
-        window.firebaseUpdatePassword = async (currentPassword, newPassword) => {
-            if(!auth.currentUser) return;
-            if (newPassword.length < 8) {
-                alert("New password must be at least 8 characters long.");
-                return;
-            }
+        window.firebaseDeleteAccount = async (password) => {
+            if (!auth.currentUser) return;
             try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+                const credential = EmailAuthProvider.credential(auth.currentUser.email, password);
                 await reauthenticateWithCredential(auth.currentUser, credential);
-                await updatePassword(auth.currentUser, newPassword);
-                alert("Security password changed successfully!");
-                document.getElementById('passwordDrawer').style.display = 'none';
-                document.getElementById('currentPasswordInput').value = '';
-                document.getElementById('newPasswordInput').value = '';
-            } catch(err) { alert("Re-authentication failed: " + err.message); }
+                await deleteDoc(doc(db, "users", auth.currentUser.uid));
+                await deleteUser(auth.currentUser);
+                alert("Account permanently deleted.");
+                window.location.reload();
+            } catch (err) { alert("Deletion failed: " + err.message); }
         };
 
+        // NEW: Max Merge Logic to prevent unstable stats resetting
         window.syncStatsToCloud = async () => {
             if (auth.currentUser) {
                 try {
@@ -656,53 +208,38 @@
             const feedbackCard = document.getElementById('searchFeedbackCard');
             feedbackCard.style.display = 'none';
             discoveredUserDoc = null;
-
             const cleanQuery = searchString.trim();
             if(!cleanQuery) return;
-            if(!isValidUsername(cleanQuery)) {
-                alert("Invalid username syntax searched.");
-                return;
-            }
-            if(cleanQuery === document.getElementById('usernameDisplayLabel').textContent) {
-                alert("You cannot add yourself."); return;
-            }
+            if(cleanQuery === document.getElementById('usernameDisplayLabel').textContent) { alert("You cannot add yourself."); return; }
 
             try {
                 const q = query(collection(db, "users"), where("username", "==", cleanQuery));
                 const querySnapshot = await getDocs(q);
-
                 if(!querySnapshot.empty) {
                     const snap = querySnapshot.docs[0];
                     discoveredUserDoc = { uid: snap.id, ...snap.data() };
-                    
-                    const container = document.getElementById('searchResultName');
-                    container.innerHTML = ''; 
-                    const innerDiv = document.createElement('div');
-                    innerDiv.style.display = 'flex';
-                    innerDiv.style.alignItems = 'center';
-                    innerDiv.style.gap = '8px';
-                    const nameSpan = document.createElement('span');
-                    nameSpan.textContent = discoveredUserDoc.username;
-                    innerDiv.appendChild(nameSpan);
-                    container.appendChild(innerDiv);
-                    
+                    document.getElementById('searchResultName').textContent = discoveredUserDoc.username;
                     feedbackCard.style.display = 'flex';
-                } else {
-                    alert("No matching runner found with that username.");
-                }
+                } else { alert("No matching runner found."); }
             } catch(e) { console.error(e); }
         };
 
-        window.addDiscoveredFriend = async () => {
+        // NEW: Friend Request System (Client-Side Mutual Graph)
+        window.sendFriendRequest = async () => {
             if(!auth.currentUser || !discoveredUserDoc) return;
             try {
-                const myDocRef = doc(db, "users", auth.currentUser.uid);
-                await updateDoc(myDocRef, {
-                    friendsList: arrayUnion(discoveredUserDoc.uid)
-                });
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { friendsList: arrayUnion(discoveredUserDoc.uid) });
                 document.getElementById('searchFeedbackCard').style.display = 'none';
                 document.getElementById('friendSearchInput').value = '';
-                alert(`Added ${discoveredUserDoc.username} to your focus dashboard matrix!`);
+                alert(`Friend request sent to ${discoveredUserDoc.username}! They must accept it to appear on your leaderboard.`);
+                window.refreshSocialHubData();
+            } catch(e) { console.error(e); }
+        };
+
+        window.acceptFriend = async (senderUid) => {
+            if(!auth.currentUser) return;
+            try {
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { friendsList: arrayUnion(senderUid) });
                 window.refreshSocialHubData();
             } catch(e) { console.error(e); }
         };
@@ -710,165 +247,122 @@
         window.removeFriendItem = async (friendUid) => {
             if(!auth.currentUser) return;
             try {
-                await updateDoc(doc(db, "users", auth.currentUser.uid), {
-                    friendsList: arrayRemove(friendUid)
-                });
+                await updateDoc(doc(db, "users", auth.currentUser.uid), { friendsList: arrayRemove(friendUid) });
                 window.refreshSocialHubData();
             } catch(e) { console.error(e); }
-        };
-
-        window.updateIdentityConfiguration = async (newUsername) => {
-            if(!auth.currentUser) return;
-            if(!isValidUsername(newUsername)) {
-                alert("Usernames must be 3-15 characters and contain only letters, numbers, or underscores.");
-                return;
-            }
-
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const q = query(collection(db, "users"), where("username", "==", newUsername));
-                    const querySnapshot = await getDocs(q);
-                    
-                    let conflict = false;
-                    querySnapshot.forEach((doc) => {
-                        if(doc.id !== auth.currentUser.uid) conflict = true;
-                    });
-
-                    if(conflict) {
-                        throw new Error("This username is already claimed inside the flow space network.");
-                    }
-
-                    const myUserRef = doc(db, "users", auth.currentUser.uid);
-                    transaction.update(myUserRef, { username: newUsername });
-                });
-
-                document.getElementById('usernameDisplayLabel').textContent = newUsername;
-                alert("Profile configuration synchronized.");
-                window.refreshSocialHubData();
-            } catch(e) { alert(e.message || "Error saving profile changes."); }
         };
 
         window.refreshSocialHubData = async () => {
             if(!auth.currentUser) return;
             try {
-                const myDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+                const myUid = auth.currentUser.uid;
+                const myDoc = await getDoc(doc(db, "users", myUid));
                 if(!myDoc.exists()) return;
-                const myData = myDoc.data();
-
-                const leaderboardList = document.getElementById('leaderboardList');
-                const friendsListContainer = document.getElementById('friendsListContainer');
                 
-                leaderboardList.innerHTML = '';
-                friendsListContainer.innerHTML = '';
+                const myData = myDoc.data();
+                const myFriends = myData.friendsList || [];
 
-                let networkProfiles = [];
-                networkProfiles.push({
-                    username: myData.username,
-                    totalFocusMinutes: window.getStatsObject().totalFocusMinutes,
-                    uid: auth.currentUser.uid
+                // 1. Find who added ME
+                const incomingQ = query(collection(db, "users"), where("friendsList", "array-contains", myUid));
+                const incomingSnap = await getDocs(incomingQ);
+                
+                const usersWhoAddedMe = new Set();
+                let incomingRequests = [];
+                
+                incomingSnap.forEach(d => {
+                    usersWhoAddedMe.add(d.id);
+                    if (!myFriends.includes(d.id)) incomingRequests.push({ uid: d.id, ...d.data() }); // They added me, I haven't added them back
                 });
 
-                if(myData.friendsList && myData.friendsList.length > 0) {
-                    for(const friendUid of myData.friendsList) {
-                        const fSnap = await getDoc(doc(db, "users", friendUid));
-                        if(fSnap.exists()) {
-                            const fData = fSnap.data();
-                            networkProfiles.push({ uid: fSnap.id, ...fData });
+                // 2. Resolve My List (Mutuals vs Pending)
+                let confirmedFriends = [];
+                let pendingSent = [];
 
-                            const fRow = document.createElement('div');
-                            fRow.className = 'friend-row-item';
-                            
-                            const identityCapsule = document.createElement('div');
-                            identityCapsule.className = 'friend-identity-capsule';
-                            const strongLabel = document.createElement('strong');
-                            strongLabel.textContent = fData.username;
-                            identityCapsule.appendChild(strongLabel);
-                            
-                            const remBtn = document.createElement('button');
-                            remBtn.className = 'remove-friend-btn';
-                            remBtn.textContent = 'Remove';
-                            remBtn.onclick = () => window.removeFriendItem(fSnap.id);
-
-                            fRow.appendChild(identityCapsule);
-                            fRow.appendChild(remBtn);
-                            friendsListContainer.appendChild(fRow);
-                        }
+                if (myFriends.length > 0) {
+                    const chunks = [];
+                    for(let i=0; i<myFriends.length; i+=10) chunks.push(myFriends.slice(i, i+10));
+                    
+                    for(const chunk of chunks) {
+                        const q = query(collection(db, "users"), where("__name__", "in", chunk));
+                        const snap = await getDocs(q);
+                        snap.forEach(fDoc => {
+                            if (usersWhoAddedMe.has(fDoc.id)) confirmedFriends.push({ uid: fDoc.id, ...fDoc.data() }); // Mutual
+                            else pendingSent.push({ uid: fDoc.id, ...fDoc.data() }); // I sent, they haven't accepted
+                        });
                     }
                 }
 
+                // Render Incoming Requests
+                const reqContainer = document.getElementById('incomingRequestsContainer');
+                reqContainer.innerHTML = '';
+                document.getElementById('requestsHeader').style.display = incomingRequests.length > 0 ? 'block' : 'none';
+                
+                incomingRequests.forEach(req => {
+                    const row = document.createElement('div');
+                    row.className = 'friend-row-item';
+                    row.innerHTML = `<div class="friend-identity-capsule"><strong>${req.username}</strong></div>
+                                     <button class="search-engine-btn" style="padding:0.3rem 0.6rem; font-size:0.75rem; background:#10B981;" onclick="window.acceptFriend('${req.uid}')">Accept Request</button>`;
+                    reqContainer.appendChild(row);
+                });
+
+                // Render Leaderboard (Only Mutual Friends + Me)
+                const leaderboardList = document.getElementById('leaderboardList');
+                leaderboardList.innerHTML = '';
+                
+                let networkProfiles = [{ username: myData.username, totalFocusMinutes: window.getStatsObject().totalFocusMinutes, uid: myUid }, ...confirmedFriends];
                 networkProfiles.sort((a, b) => b.totalFocusMinutes - a.totalFocusMinutes);
 
                 networkProfiles.forEach((profile, index) => {
                     const row = document.createElement('div');
-                    row.className = 'leaderboard-row-item';
-                    if(profile.uid === auth.currentUser.uid) {
-                        row.style.border = '1px solid var(--theme-accent)';
-                        row.style.background = 'rgba(255,255,255,0.02)';
-                    }
-
-                    const rankCapsule = document.createElement('div');
-                    rankCapsule.className = 'rank-identity-capsule';
-                    
-                    const posIndex = document.createElement('span');
-                    posIndex.className = 'rank-position-index';
-                    posIndex.textContent = `#${index + 1}`;
-                    
-                    const nameSpan = document.createElement('span');
-                    nameSpan.textContent = `${profile.username} ${profile.uid === auth.currentUser.uid ? '(You)' : ''}`;
-                    
-                    rankCapsule.appendChild(posIndex);
-                    rankCapsule.appendChild(nameSpan);
-
-                    const scoreSpan = document.createElement('span');
-                    scoreSpan.style.fontWeight = '700';
-                    scoreSpan.textContent = `${profile.totalFocusMinutes}m`;
-
-                    row.appendChild(rankCapsule);
-                    row.appendChild(scoreSpan);
+                    row.className = 'friend-row-item';
+                    if(profile.uid === myUid) { row.style.border = '1px solid var(--theme-accent)'; row.style.background = 'rgba(255,255,255,0.02)'; }
+                    row.innerHTML = `<div class="rank-identity-capsule"><span class="rank-position-index">#${index + 1}</span> <span>${profile.username} ${profile.uid === myUid ? '(You)' : ''}</span></div>
+                                     <span style="font-weight:700;">${profile.totalFocusMinutes}m</span>`;
                     leaderboardList.appendChild(row);
                 });
 
-            } catch(e) { console.error("Social rendering cycle halted:", e); }
+                // Render Friend Management List (Confirmed & Pending)
+                const friendsListContainer = document.getElementById('friendsListContainer');
+                friendsListContainer.innerHTML = '';
+                [...confirmedFriends, ...pendingSent].forEach(f => {
+                    const isPending = pendingSent.some(p => p.uid === f.uid);
+                    const row = document.createElement('div');
+                    row.className = 'friend-row-item';
+                    row.innerHTML = `<div class="friend-identity-capsule"><strong>${f.username}</strong> ${isPending ? '<span style="font-size:0.7rem; color:var(--text-muted);">(Pending...)</span>' : ''}</div>
+                                     <button class="remove-friend-btn" onclick="window.removeFriendItem('${f.uid}')">${isPending ? 'Cancel Request' : 'Remove'}</button>`;
+                    friendsListContainer.appendChild(row);
+                });
+
+            } catch(e) { console.error("Social render error:", e); }
         };
 
         onAuthStateChanged(auth, async (user) => {
-            const guestAuthForm = document.getElementById('guestAuthForm');
-            const userDashboardView = document.getElementById('userDashboardView');
-            const userEmailDisplay = document.getElementById('userEmailDisplay');
-            const discreteAuthLink = document.getElementById('discreteAuthLink');
-            const socialNetworkHub = document.getElementById('socialNetworkHub');
-
             if (user) {
-                guestAuthForm.style.display = 'none';
-                userDashboardView.style.display = 'flex';
-                socialNetworkHub.style.display = 'block';
-                userEmailDisplay.textContent = user.email;
-                discreteAuthLink.textContent = "Manage Account Profile";
+                document.getElementById('guestAuthForm').style.display = 'none';
+                document.getElementById('userDashboardView').style.display = 'flex';
+                document.getElementById('socialNetworkHub').style.display = 'block';
+                document.getElementById('userEmailDisplay').textContent = user.email;
+                document.getElementById('discreteAuthLink').textContent = "Manage Account Profile";
                 
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists()) {
                     const cloudData = docSnap.data();
-                    document.getElementById('usernameDisplayLabel').textContent = cloudData.username || generateFallbackUsername(user.email);
+                    document.getElementById('usernameDisplayLabel').textContent = cloudData.username;
                     
-                    window.setStatsObject({
-                        totalFocusMinutes: cloudData.totalFocusMinutes || window.getStatsObject().totalFocusMinutes,
-                        completedRounds: cloudData.completedRounds || window.getStatsObject().completedRounds
-                    });
+                    // NEW: Strict Merge logic to prevent 0-minute resets
+                    const localStats = window.getStatsObject();
+                    const mergedMins = Math.max(localStats.totalFocusMinutes, cloudData.totalFocusMinutes || 0);
+                    const mergedRounds = Math.max(localStats.completedRounds, cloudData.completedRounds || 0);
+                    
+                    window.setStatsObject({ totalFocusMinutes: mergedMins, completedRounds: mergedRounds });
+                    window.syncStatsToCloud();
                 }
-                window.refreshSocialHubData();
             } else {
-                userDashboardView.style.display = 'none';
-                socialNetworkHub.style.display = 'none';
-                guestAuthForm.style.display = 'block';
-                discreteAuthLink.textContent = "Sign In (Optional)";
-                document.getElementById('passwordDrawer').style.display = 'none';
+                document.getElementById('userDashboardView').style.display = 'none';
+                document.getElementById('socialNetworkHub').style.display = 'none';
+                document.getElementById('guestAuthForm').style.display = 'block';
+                document.getElementById('discreteAuthLink').textContent = "Sign In (Optional)";
             }
-        });
-
-        document.getElementById('saveProfileBtn').addEventListener('click', () => {
-            const newUser = document.getElementById('editUsernameInput').value.trim();
-            window.updateIdentityConfiguration(newUser);
-            document.getElementById('profileEditDrawer').style.display = 'none';
         });
     </script>
 </head>
@@ -877,10 +371,6 @@
 <div class="app-shell" id="appShell">
     <div class="relative-content">
         
-        <div class="top-action-bar">
-            <button id="pwaInstallBtn">📥 Install App</button>
-        </div>
-
         <div id="status" class="status-badge">Focus Phase</div>
         <div id="timer" class="timer-display">25:00</div>
         <div id="round" class="cycle-tracker">Round 1 of 4</div>
@@ -911,36 +401,21 @@
         </div>
 
         <div class="settings-panel" style="margin-top: 1.5rem;">
-            <div class="panel-header">
-                Performance Dashboard
-                <button id="clearMetricsLink" class="reset-link">Clear Metrics</button>
-            </div>
+            <div class="panel-header">Performance Dashboard <button id="clearMetricsLink" class="reset-link">Clear</button></div>
             <div class="dashboard-grid">
-                <div class="metric-tile">
-                    <div id="statMinutes" class="metric-value">0</div>
-                    <div class="metric-label">Focus Mins</div>
-                </div>
-                <div class="metric-tile">
-                    <div id="statRounds" class="metric-value">0</div>
-                    <div class="metric-label">Rounds Clear</div>
-                </div>
+                <div class="metric-tile"><div id="statMinutes" class="metric-value">0</div><div class="metric-label">Focus Mins</div></div>
+                <div class="metric-tile"><div id="statRounds" class="metric-value">0</div><div class="metric-label">Rounds Clear</div></div>
             </div>
         </div>
 
         <button id="discreteAuthLink" class="discrete-auth-toggle">Sign In (Optional)</button>
 
         <div id="authPanel" class="auth-panel">
-            
             <div id="guestAuthForm">
                 <div class="auth-nav-tabs">
                     <button id="tabLogin" class="auth-tab active">Log In</button>
-                    <button id="tabSignup" class="auth-tab">Create Account</button>
+                    <button id="tabSignup" class="auth-tab">Register</button>
                 </div>
-                
-                <div class="auth-notice">
-                    Signing in allows you to preserve your data across separate systems, as well as include companions and view friendlist rankings.
-                </div>
-                
                 <input type="email" id="authEmail" placeholder="Email Address">
                 <input type="password" id="authPassword" placeholder="Password">
                 <button id="authSubmitAction" class="auth-submit-btn">Log In</button>
@@ -948,57 +423,48 @@
 
             <div id="userDashboardView" class="user-dashboard-view">
                 <div class="panel-header" style="margin:0;">Active User Profile</div>
-                
                 <div class="profile-customizer-box">
                     <div class="profile-text-fields">
                         <span id="usernameDisplayLabel" class="profile-username-tag">---</span>
                         <span id="userEmailDisplay" class="profile-email-subtext">---</span>
                     </div>
-                    <button id="editProfileBtn" class="btn-nested-action" style="max-width:60px; padding:0.4rem;">Edit</button>
                 </div>
                 
                 <div class="nested-action-row">
-                    <button id="togglePasswordBtn" class="btn-nested-action">Change Password</button>
-                    <button id="logoutBtn" class="btn-nested-action" style="color:#EF4444;">Log Out</button>
-                </div>
-
-                <div id="profileEditDrawer" class="sub-drawer-panel">
-                    <input type="text" id="editUsernameInput" placeholder="New Unique Username" style="margin-bottom:1.25rem;">
-                    <button id="saveProfileBtn" class="auth-submit-btn">Save Identity Changes</button>
-                </div>
-
-                <div id="passwordDrawer" class="sub-drawer-panel">
-                    <input type="password" id="currentPasswordInput" placeholder="Enter Current Password" style="margin-bottom:0.5rem;">
-                    <input type="password" id="newPasswordInput" placeholder="Enter New Secure Password">
-                    <button id="submitNewPasswordBtn" class="auth-submit-btn" style="background:#2D2D35; color:#ffffff;">Update Password</button>
+                    <button id="logoutBtn" class="btn-nested-action">Log Out</button>
+                    <button id="deleteAccountBtn" class="btn-nested-action" style="color:#EF4444; border-color: #571a1a;">Delete Account</button>
                 </div>
             </div>
         </div>
 
         <div id="socialNetworkHub" class="social-network-hub" style="display:none;">
-            <div class="panel-header">Synchronized Sync Leaderboard</div>
+            <div class="panel-header" id="requestsHeader" style="display:none; color:#10B981;">Incoming Friend Requests</div>
+            <div id="incomingRequestsContainer" class="leaderboard-list"></div>
+
+            <div class="panel-header" style="margin-top:1.5rem;">Synchronized Leaderboard</div>
             <div id="leaderboardList" class="leaderboard-list"></div>
 
-            <div class="panel-header" style="margin-top:1.5rem;">Connect with Flow Runners</div>
+            <div class="panel-header" style="margin-top:1.5rem;">Add Flow Runners</div>
             <div class="search-engine-input-wrapper">
-                <input type="text" id="friendSearchInput" placeholder="Search exact global username...">
-                <button id="friendSearchBtn" class="search-engine-btn">Search</button>
+                <input type="text" id="friendSearchInput" placeholder="Search exact username...">
+                <button id="friendSearchBtn" class="search-engine-btn">Find</button>
             </div>
 
             <div id="searchFeedbackCard" class="search-feedback-card">
                 <span id="searchResultName" style="font-size:0.85rem; font-weight:700;">---</span>
-                <button id="addFriendActionBtn" class="search-engine-btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Add Friend</button>
+                <button id="addFriendActionBtn" class="search-engine-btn" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Send Request</button>
             </div>
 
-            <div class="panel-header" style="margin-top:1.25rem; font-size:0.75rem;">Your Friend List Ranking</div>
+            <div class="panel-header" style="margin-top:1.25rem; font-size:0.75rem;">Manage Friend List</div>
             <div id="friendsListContainer" class="friends-list-container"></div>
 
-            <div class="social-matrix-guide-box">
-                <div class="panel-header" style="font-size:0.65rem; margin-bottom:0.5rem; color:var(--text-main);">How the Friend List Works</div>
+            <!-- NEW: Closeable Instruction Box -->
+            <div class="social-matrix-guide-box" id="instructionGuideBox">
+                <button class="close-guide-btn" onclick="document.getElementById('instructionGuideBox').style.display='none'">&times;</button>
+                <div class="panel-header" style="font-size:0.65rem; margin-bottom:0.5rem; color:var(--text-main);">How Friends Work</div>
                 <ul>
-                    <li><strong>Global Connectivity:</strong> Search your friend's exact unique username to add them directly into your hub view.</li>
-                    <li><strong>Real-Time Leaderboard:</strong> Your metrics rank automatically against your friends based on total accumulated focus minutes.</li>
-                    <li><strong>Auto-Sync Engine:</strong> Every focus minute you log automatically updates the board, keeping your workspace competitive and accurate.</li>
+                    <li><strong>Send Requests:</strong> Search a username to send a request. They will remain "Pending" until accepted.</li>
+                    <li><strong>Mutual Display:</strong> Only users who have mutually accepted each other will appear on the Leaderboard.</li>
                 </ul>
             </div>
         </div>
@@ -1008,387 +474,135 @@
 
 <script>
     let stats = { totalFocusMinutes: 0, completedRounds: 0 };
-    window.getStatsObject = () => stats;
+    window.getStatsObject = () => {
+        try {
+            const saved = localStorage.getItem('fp_stats');
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return stats;
+    };
+    
     window.setStatsObject = (newStats) => {
         stats = newStats;
         localStorage.setItem('fp_stats', JSON.stringify(stats));
         updateStatUI();
     };
 
-    const FOCUS_TIME = 25;
-    const SHORT_BREAK = 5;
-    const LONG_BREAK = 15;
+    const FOCUS_TIME = 25, SHORT_BREAK = 5, LONG_BREAK = 15;
+    let timeLeft = FOCUS_TIME * 60, timerId = null, currentMode = 'focus', roundCount = 1;
+    let audioCtx = null, oscL = null, oscR = null, gainNode = null;
 
-    let timeLeft = FOCUS_TIME * 60;
-    let timerId = null;
-    let currentMode = 'focus'; 
-    let roundCount = 1;
-
-    let audioCtx = null;
-    let oscL = null;
-    let oscR = null;
-    let gainNode = null;
-
-    const startBtn = document.getElementById('startBtn');
-    const skipBtn = document.getElementById('skipBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const audioToggle = document.getElementById('audioToggle');
-    const wavePreset = document.getElementById('wavePreset');
-    const volumeSlider = document.getElementById('volume');
-    const clearMetricsLink = document.getElementById('clearMetricsLink');
-    const discreteAuthLink = document.getElementById('discreteAuthLink');
-    const authPanel = document.getElementById('authPanel');
-    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
-
-    const tabLogin = document.getElementById('tabLogin');
-    const tabSignup = document.getElementById('tabSignup');
-    const authSubmitAction = document.getElementById('authSubmitAction');
-    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
-    const passwordDrawer = document.getElementById('passwordDrawer');
-    const submitNewPasswordBtn = document.getElementById('submitNewPasswordBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    const editProfileBtn = document.getElementById('editProfileBtn');
-    const profileEditDrawer = document.getElementById('profileEditDrawer');
-    const friendSearchBtn = document.getElementById('friendSearchBtn');
-    const addFriendActionBtn = document.getElementById('addFriendActionBtn');
-
-    let activeAuthMode = 'login'; 
-
-    function loadAudioSettings() {
-        const savedToggle = localStorage.getItem('fp_audio_enabled');
-        if (savedToggle !== null) audioToggle.checked = (savedToggle === 'true');
-        const savedPreset = localStorage.getItem('fp_wave_preset');
-        if (savedPreset !== null) wavePreset.value = savedPreset;
-        const savedVol = localStorage.getItem('fp_volume');
-        if (savedVol !== null) volumeSlider.value = savedVol;
-    }
-
-    function saveAudioSettings() {
-        localStorage.setItem('fp_audio_enabled', audioToggle.checked);
-        localStorage.setItem('fp_wave_preset', wavePreset.value);
-        localStorage.setItem('fp_volume', volumeSlider.value);
-    }
-
-    function loadStats() {
-        try {
-            const savedStats = localStorage.getItem('fp_stats');
-            if (savedStats) {
-                stats = JSON.parse(savedStats);
-                if (typeof stats.totalFocusMinutes !== 'number' || typeof stats.completedRounds !== 'number') {
-                    throw new Error("Invalid format");
-                }
-                updateStatUI();
-            }
-        } catch (e) {
-            console.warn("Corrupted storage detected, resetting client metrics:", e);
-            stats = { totalFocusMinutes: 0, completedRounds: 0 };
-            localStorage.setItem('fp_stats', JSON.stringify(stats));
-            updateStatUI();
-        }
-    }
+    const startBtn = document.getElementById('startBtn'), skipBtn = document.getElementById('skipBtn'), resetBtn = document.getElementById('resetBtn');
 
     function updateStatUI() {
         document.getElementById('statMinutes').textContent = stats.totalFocusMinutes;
         document.getElementById('statRounds').textContent = stats.completedRounds;
     }
 
-    function logFocusMinute() {
-        stats.totalFocusMinutes += 1;
-        updateStatUI();
-        localStorage.setItem('fp_stats', JSON.stringify(stats));
-        if(window.syncStatsToCloud) window.syncStatsToCloud();
-    }
-
-    function logCompletedRound() {
-        stats.completedRounds += 1;
-        updateStatUI();
-        localStorage.setItem('fp_stats', JSON.stringify(stats));
-        if(window.syncStatsToCloud) window.syncStatsToCloud();
-    }
-
     function updateDisplay() {
-        const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-        const secs = (timeLeft % 60).toString().padStart(2, '0');
+        const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0'), secs = (timeLeft % 60).toString().padStart(2, '0');
         document.getElementById('timer').textContent = `${mins}:${secs}`;
-        
-        const statusEl = document.getElementById('status');
         const root = document.documentElement;
-        
-        if (currentMode === 'focus') {
-            statusEl.textContent = "Focus Phase";
-            root.style.setProperty('--theme-glow', 'var(--focus-glow)');
-            root.style.setProperty('--theme-accent', 'var(--focus-accent)');
-        } else if (currentMode === 'shortBreak') {
-            statusEl.textContent = "Short Break";
-            root.style.setProperty('--theme-glow', 'var(--break-glow)');
-            root.style.setProperty('--theme-accent', 'var(--break-accent)');
-        } else {
-            statusEl.textContent = "Long Break";
-            root.style.setProperty('--theme-glow', 'var(--long-glow)');
-            root.style.setProperty('--theme-accent', 'var(--long-accent)');
-        }
+        if (currentMode === 'focus') { document.getElementById('status').textContent = "Focus Phase"; root.style.setProperty('--theme-glow', 'var(--focus-glow)'); root.style.setProperty('--theme-accent', 'var(--focus-accent)'); }
+        else if (currentMode === 'shortBreak') { document.getElementById('status').textContent = "Short Break"; root.style.setProperty('--theme-glow', 'var(--break-glow)'); root.style.setProperty('--theme-accent', 'var(--break-accent)'); }
+        else { document.getElementById('status').textContent = "Long Break"; root.style.setProperty('--theme-glow', 'var(--long-glow)'); root.style.setProperty('--theme-accent', 'var(--long-accent)'); }
         document.getElementById('round').textContent = `Round ${roundCount} of 4`;
     }
 
     function toggleTimer() {
-        try {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        } catch(e) { console.warn(e); }
+        if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
-        if (timerId) {
-            clearInterval(timerId);
-            timerId = null;
-            startBtn.textContent = 'Start';
-            stopAudio();
-        } else {
-            startBtn.textContent = 'Pause';
-            if (currentMode === 'focus') startAudio();
-            
+        if (timerId) { clearInterval(timerId); timerId = null; startBtn.textContent = 'Start'; stopAudio(); }
+        else {
+            startBtn.textContent = 'Pause'; if (currentMode === 'focus') startAudio();
             timerId = setInterval(() => {
                 timeLeft--;
-                if (currentMode === 'focus' && (timeLeft > 0) && (timeLeft % 60 === 0)) {
-                    logFocusMinute();
+                if (currentMode === 'focus' && timeLeft >= 0 && timeLeft % 60 === 0) {
+                    stats.totalFocusMinutes++; window.setStatsObject(stats);
+                    if(window.syncStatsToCloud) window.syncStatsToCloud();
                 }
-                if (timeLeft < 0) {
-                    handlePhaseTransition(true);
-                }
+                if (timeLeft < 0) handlePhaseTransition(true);
                 updateDisplay();
             }, 1000);
         }
     }
 
-    function handlePhaseTransition(playAlert = false) {
-        clearInterval(timerId);
-        timerId = null;
-        startBtn.textContent = 'Start';
-        stopAudio();
-
-        if (playAlert) {
-            if (currentMode === 'focus') playChimeNotification('focusEnds');
-            else playChimeNotification('breakEnds');
-        }
-
+    function handlePhaseTransition(playAlert) {
+        clearInterval(timerId); timerId = null; startBtn.textContent = 'Start'; stopAudio();
+        if (playAlert) playChimeNotification(currentMode === 'focus' ? 'focusEnds' : 'breakEnds');
         if (currentMode === 'focus') {
-            logCompletedRound();
-            if (roundCount < 4) {
-                currentMode = 'shortBreak';
-                timeLeft = SHORT_BREAK * 60;
-            } else {
-                currentMode = 'longBreak';
-                timeLeft = LONG_BREAK * 60;
-            }
+            stats.completedRounds++; window.setStatsObject(stats); if(window.syncStatsToCloud) window.syncStatsToCloud();
+            if (roundCount < 4) { currentMode = 'shortBreak'; timeLeft = SHORT_BREAK * 60; }
+            else { currentMode = 'longBreak'; timeLeft = LONG_BREAK * 60; }
         } else {
-            if (currentMode === 'longBreak') roundCount = 1;
-            else roundCount++;
-            currentMode = 'focus';
-            timeLeft = FOCUS_TIME * 60;
+            if (currentMode === 'longBreak') roundCount = 1; else roundCount++;
+            currentMode = 'focus'; timeLeft = FOCUS_TIME * 60;
         }
         toggleTimer();
     }
 
-    function initAudioNodes() {
-        if (!audioToggle.checked) return;
-        if (!audioCtx || (oscL && oscR)) return;
-
-        oscL = audioCtx.createOscillator();
-        oscR = audioCtx.createOscillator();
-        let pannerL = audioCtx.createStereoPanner();
-        let pannerR = audioCtx.createStereoPanner();
-        gainNode = audioCtx.createGain();
-
-        pannerL.pan.value = -1; 
-        pannerR.pan.value = 1;  
-        
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-
-        oscL.connect(pannerL).connect(gainNode);
-        oscR.connect(pannerR).connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        updateFrequencies();
-
-        oscL.start();
-        oscR.start();
-    }
-
-    function updateFrequencies() {
-        if (!oscL || !oscR) return;
-        const preset = wavePreset.value;
-        oscL.frequency.setValueAtTime(180, audioCtx.currentTime); 
-        oscR.frequency.setValueAtTime((preset === 'beta') ? 195 : 190, audioCtx.currentTime);
-    }
-
     function startAudio() {
-        if (!audioToggle.checked) return;
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        initAudioNodes();
-        
-        const targetVol = parseFloat(volumeSlider.value);
-        if (gainNode && audioCtx) {
-            gainNode.gain.linearRampToValueAtTime(targetVol, audioCtx.currentTime + 0.05);
+        if (!document.getElementById('audioToggle').checked || !audioCtx) return;
+        if (!oscL) {
+            oscL = audioCtx.createOscillator(); oscR = audioCtx.createOscillator();
+            let pL = audioCtx.createStereoPanner(), pR = audioCtx.createStereoPanner();
+            gainNode = audioCtx.createGain(); pL.pan.value = -1; pR.pan.value = 1; gainNode.gain.value = 0;
+            oscL.connect(pL).connect(gainNode); oscR.connect(pR).connect(gainNode); gainNode.connect(audioCtx.destination);
+            oscL.start(); oscR.start();
         }
+        oscL.frequency.value = 180; oscR.frequency.value = document.getElementById('wavePreset').value === 'beta' ? 195 : 190;
+        gainNode.gain.linearRampToValueAtTime(parseFloat(document.getElementById('volume').value), audioCtx.currentTime + 0.05);
     }
-
-    function stopAudio() {
-        if (audioCtx && gainNode) {
-            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
-        }
-    }
+    
+    function stopAudio() { if (gainNode && audioCtx) gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05); }
 
     function playChimeNotification(type) {
         if (!audioCtx) return;
-        const chimeOsc = audioCtx.createOscillator();
-        const chimeGain = audioCtx.createGain();
-        chimeOsc.connect(chimeGain).connect(audioCtx.destination);
-        const now = audioCtx.currentTime;
-
-        if (type === 'focusEnds') {
-            chimeOsc.type = 'sine';
-            chimeOsc.frequency.setValueAtTime(659.25, now); 
-            chimeOsc.frequency.setValueAtTime(880.00, now + 0.12); 
-            chimeGain.gain.setValueAtTime(0, now);
-            chimeGain.gain.linearRampToValueAtTime(0.2, now + 0.03);
-            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-            chimeOsc.start(now); chimeOsc.stop(now + 0.6);
-        } else {
-            chimeOsc.type = 'triangle'; 
-            chimeOsc.frequency.setValueAtTime(523.25, now); 
-            chimeGain.gain.setValueAtTime(0, now);
-            chimeGain.gain.linearRampToValueAtTime(0.15, now + 0.05);
-            chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-            chimeOsc.start(now); chimeOsc.stop(now + 0.5);
-        }
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain).connect(audioCtx.destination);
+        const now = audioCtx.currentTime; gain.gain.setValueAtTime(0, now);
+        if (type === 'focusEnds') { osc.frequency.setValueAtTime(659.25, now); gain.gain.linearRampToValueAtTime(0.2, now+0.03); gain.gain.exponentialRampToValueAtTime(0.001, now+0.6); osc.start(now); osc.stop(now+0.6); }
+        else { osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now); gain.gain.linearRampToValueAtTime(0.15, now+0.05); gain.gain.exponentialRampToValueAtTime(0.001, now+0.5); osc.start(now); osc.stop(now+0.5); }
     }
 
     startBtn.addEventListener('click', toggleTimer);
-    
-    skipBtn.addEventListener('click', () => {
-        handlePhaseTransition(false); 
-        updateDisplay();
-    });
-    
-    resetBtn.addEventListener('click', () => {
-        clearInterval(timerId);
-        timerId = null;
-        stopAudio();
-        currentMode = 'focus';
-        roundCount = 1;
-        timeLeft = FOCUS_TIME * 60;
-        startBtn.textContent = 'Start';
-        updateDisplay();
+    skipBtn.addEventListener('click', () => { handlePhaseTransition(false); updateDisplay(); });
+    resetBtn.addEventListener('click', () => { clearInterval(timerId); timerId=null; stopAudio(); currentMode='focus'; roundCount=1; timeLeft=FOCUS_TIME*60; startBtn.textContent='Start'; updateDisplay(); });
+
+    document.getElementById('audioToggle').addEventListener('change', () => { if (document.getElementById('audioToggle').checked && timerId && currentMode === 'focus') startAudio(); else stopAudio(); });
+    document.getElementById('wavePreset').addEventListener('change', () => { if(oscR) oscR.frequency.value = document.getElementById('wavePreset').value === 'beta' ? 195 : 190; });
+    document.getElementById('volume').addEventListener('input', (e) => { if(gainNode) gainNode.gain.value = parseFloat(e.target.value); });
+
+    document.getElementById('clearMetricsLink').addEventListener('click', () => {
+        if(confirm("Wipe clear your performance metrics dashboard logs?")) { window.setStatsObject({ totalFocusMinutes: 0, completedRounds: 0 }); if(window.syncStatsToCloud) window.syncStatsToCloud(); }
     });
 
-    audioToggle.addEventListener('change', () => {
-        saveAudioSettings();
-        if (audioToggle.checked && timerId && currentMode === 'focus') startAudio();
-        else stopAudio();
+    document.getElementById('discreteAuthLink').addEventListener('click', () => {
+        const p = document.getElementById('authPanel'); p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        if(p.style.display === 'block') setTimeout(() => p.scrollIntoView({ behavior: 'smooth' }), 50);
     });
 
-    wavePreset.addEventListener('change', () => {
-        saveAudioSettings();
-        updateFrequencies();
+    let authMode = 'login';
+    document.getElementById('tabLogin').addEventListener('click', (e) => { authMode='login'; e.target.classList.add('active'); document.getElementById('tabSignup').classList.remove('active'); document.getElementById('authSubmitAction').textContent='Log In'; });
+    document.getElementById('tabSignup').addEventListener('click', (e) => { authMode='signup'; e.target.classList.add('active'); document.getElementById('tabLogin').classList.remove('active'); document.getElementById('authSubmitAction').textContent='Register'; });
+    document.getElementById('authSubmitAction').addEventListener('click', () => {
+        const e = document.getElementById('authEmail').value, p = document.getElementById('authPassword').value;
+        if(authMode === 'login') window.firebaseLogIn(e, p); else window.firebaseSignUp(e, p);
     });
 
-    volumeSlider.addEventListener('input', () => {
-        if (gainNode && audioCtx) {
-            gainNode.gain.setValueAtTime(parseFloat(volumeSlider.value), audioCtx.currentTime);
-        }
-    });
-    volumeSlider.addEventListener('change', saveAudioSettings);
-
-    clearMetricsLink.addEventListener('click', () => {
-        if(confirm("Wipe clear your performance metrics dashboard logs?")) {
-            stats = { totalFocusMinutes: 0, completedRounds: 0 };
-            localStorage.setItem('fp_stats', JSON.stringify(stats));
-            updateStatUI();
-            if(window.syncStatsToCloud) window.syncStatsToCloud();
+    document.getElementById('logoutBtn').addEventListener('click', () => window.firebaseLogOut());
+    document.getElementById('deleteAccountBtn').addEventListener('click', () => {
+        if(confirm("⚠️ WARNING: This will permanently erase your profile. Are you sure?")) {
+            const pass = prompt("Enter your password to confirm permanent account deletion:");
+            if(pass) window.firebaseDeleteAccount(pass);
         }
     });
 
-    discreteAuthLink.addEventListener('click', () => {
-        authPanel.style.display = (authPanel.style.display === 'block') ? 'none' : 'block';
-        if(authPanel.style.display === 'block') {
-            setTimeout(() => { authPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
-        }
-    });
+    document.getElementById('friendSearchBtn').addEventListener('click', () => window.executeUsernameSearch(document.getElementById('friendSearchInput').value));
+    document.getElementById('addFriendActionBtn').addEventListener('click', () => window.sendFriendRequest());
 
-    tabLogin.addEventListener('click', () => {
-        activeAuthMode = 'login';
-        tabLogin.classList.add('active');
-        tabSignup.classList.remove('active');
-        authSubmitAction.textContent = 'Log In';
-    });
-
-    tabSignup.addEventListener('click', () => {
-        activeAuthMode = 'signup';
-        tabSignup.classList.add('active');
-        tabLogin.classList.remove('active');
-        authSubmitAction.textContent = 'Register Account';
-    });
-
-    authSubmitAction.addEventListener('click', () => {
-        const email = document.getElementById('authEmail').value;
-        const pass = document.getElementById('authPassword').value;
-        if(!email || !pass) { alert("Please complete form fields."); return; }
-        if(activeAuthMode === 'login') window.firebaseLogIn(email, pass);
-        else window.firebaseSignUp(email, pass);
-    });
-
-    togglePasswordBtn.addEventListener('click', () => {
-        passwordDrawer.style.display = (passwordDrawer.style.display === 'block') ? 'none' : 'block';
-    });
-
-    submitNewPasswordBtn.addEventListener('click', () => {
-        const currentPass = document.getElementById('currentPasswordInput').value;
-        const newPass = document.getElementById('newPasswordInput').value;
-        if(!currentPass || !newPass) { alert("Please fill out all fields."); return; }
-        if(window.firebaseUpdatePassword) window.firebaseUpdatePassword(currentPass, newPass);
-    });
-
-    logoutBtn.addEventListener('click', () => { if(window.firebaseLogOut) window.firebaseLogOut(); });
-
-    editProfileBtn.addEventListener('click', () => {
-        profileEditDrawer.style.display = (profileEditDrawer.style.display === 'block') ? 'none' : 'block';
-        if(profileEditDrawer.style.display === 'block') {
-            document.getElementById('editUsernameInput').value = document.getElementById('usernameDisplayLabel').textContent;
-        }
-    });
-
-    friendSearchBtn.addEventListener('click', () => {
-        const searchVal = document.getElementById('friendSearchInput').value;
-        if(window.executeUsernameSearch) window.executeUsernameSearch(searchVal);
-    });
-
-    addFriendActionBtn.addEventListener('click', () => {
-        if(window.addDiscoveredFriend) window.addDiscoveredFriend();
-    });
-
-    loadAudioSettings();
-    loadStats();
-    updateDisplay();
-
-    let deferredPrompt = null;
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(err => {
-                console.log("Service Worker registration offline fallback active:", err);
-            });
-        });
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); deferredPrompt = e; pwaInstallBtn.style.display = 'block';
-    });
-
-    pwaInstallBtn.addEventListener('click', () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
-            if (choice.outcome === 'accepted') pwaInstallBtn.style.display = 'none';
-            deferredPrompt = null;
-        });
-    });
+    stats = window.getStatsObject(); updateStatUI(); updateDisplay();
 </script>
 </body>
 </html>
